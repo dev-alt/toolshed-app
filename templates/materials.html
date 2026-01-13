@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Materials - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Materials</h1>
+    <div style="color: var(--text-secondary); font-size: 14px;">Coming soon...</div>
+</div>
+
+{% if materials %}
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Location</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in materials %}
+            <tr>
+                <td style="font-weight: 600;">{{ item.name }}</td>
+                <td>{{ item.material_type or '-' }}</td>
+                <td>{{ item.quantity }} {{ item.unit }}</td>
+                <td>{{ item.location or '-' }}</td>
+                <td style="font-size: 12px; color: var(--text-secondary);">{{ item.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center" style="padding: 60px 20px;">
+    <div style="font-size: 48px; margin-bottom: 20px;">🪵</div>
+    <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 10px;">No materials tracked</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+        Track your wood, aluminum extrusions, resin, filament, and other materials
+    </p>
+</div>
+{% endif %}
+{% endblock %}

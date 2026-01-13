@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Add Consumable - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Add Consumable</h1>
+    <a href="{{ url_for('consumables') }}" class="btn">Cancel</a>
+</div>
+
+<div style="max-width: 800px;">
+    <form method="POST" action="{{ url_for('add_consumable') }}" enctype="multipart/form-data">
+        <div style="background: var(--bg-secondary); border: 2px solid var(--border); padding: 30px;">
+            
+            <div class="form-group">
+                <label class="form-label" for="name">Consumable Name *</label>
+                <input type="text" id="name" name="name" class="form-input" 
+                       placeholder="e.g., 125mm Sanding Discs, HSS Drill Bits Set" required>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category</label>
+                    <select id="category" name="category" class="form-select">
+                        <option value="">Select Category</option>
+                        <option value="Drill Bits">Drill Bits</option>
+                        <option value="Saw Blades">Saw Blades</option>
+                        <option value="Sanding Discs">Sanding Discs</option>
+                        <option value="Grinding Discs">Grinding Discs</option>
+                        <option value="Cutting Discs">Cutting Discs</option>
+                        <option value="Fasteners">Fasteners</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="unit">Unit</label>
+                    <select id="unit" name="unit" class="form-select">
+                        <option value="pcs">Pieces (pcs)</option>
+                        <option value="sets">Sets</option>
+                        <option value="boxes">Boxes</option>
+                        <option value="m">Meters (m)</option>
+                        <option value="kg">Kilograms (kg)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="quantity">Current Quantity *</label>
+                    <input type="number" id="quantity" name="quantity" class="form-input" 
+                           min="0" step="1" value="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="min_quantity">Minimum Stock Level</label>
+                    <input type="number" id="min_quantity" name="min_quantity" class="form-input" 
+                           min="0" step="1" value="0">
+                    <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                        Get alert when stock falls below this level
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="location">Storage Location</label>
+                <input type="text" id="location" name="location" class="form-input" 
+                       placeholder="e.g., Drawer 2, Bin A3, Shelf B">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="compatible_with">Compatible With</label>
+                <input type="text" id="compatible_with" name="compatible_with" class="form-input" 
+                       placeholder="e.g., Orbital Sander, Angle Grinder, Jigsaw">
+                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Which tools use this consumable?
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="purchase_url">Purchase URL</label>
+                <input type="url" id="purchase_url" name="purchase_url" class="form-input"
+                       placeholder="https://www.bunnings.co.nz/... or AliExpress link">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-textarea" 
+                          placeholder="Specifications, compatibility notes, or other details..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="image">Image</label>
+                <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Accepted formats: PNG, JPG, GIF, WebP (Max 16MB)
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">Add Consumable</button>
+                <a href="{{ url_for('consumables') }}" class="btn">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

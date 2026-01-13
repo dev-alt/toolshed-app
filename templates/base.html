@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Toolshed App{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <div class="nav-brand">
+                <a href="{{ url_for('index') }}">
+                    <span class="brand-icon">⚙</span>
+                    <span class="brand-text">TOOLSHED</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('tools') }}" class="nav-link">Tools</a>
+                <a href="{{ url_for('consumables') }}" class="nav-link">Consumables</a>
+                <a href="{{ url_for('materials') }}" class="nav-link">Materials</a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="footer">
+            <p>Toolshed App • Tauranga, NZ</p>
+        </footer>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

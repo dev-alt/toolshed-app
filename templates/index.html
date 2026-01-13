@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Dashboard</h1>
+    <div class="flex gap-20">
+        <a href="{{ url_for('add_tool') }}" class="btn btn-primary">+ Add Tool</a>
+        <a href="{{ url_for('add_consumable') }}" class="btn">+ Add Consumable</a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-label">Total Tools</div>
+        <div class="stat-value">{{ tool_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Consumables</div>
+        <div class="stat-value">{{ consumable_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Materials</div>
+        <div class="stat-value">{{ material_count }}</div>
+    </div>
+</div>
+
+{% if low_stock %}
+<div class="mb-30">
+    <h2 class="section-header">Low Stock Alerts</h2>
+    {% for item in low_stock %}
+    <div class="low-stock-item">
+        <div>
+            <div class="low-stock-name">{{ item.name }}</div>
+            <div class="tool-meta">{{ item.category }}</div>
+        </div>
+        <div class="low-stock-qty">{{ item.quantity }} {{ item.unit }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if recent_tools %}
+<div>
+    <h2 class="section-header">Recent Tools</h2>
+    <div class="tool-grid">
+        {% for tool in recent_tools %}
+        <a href="{{ url_for('tool_detail', tool_id=tool.id) }}" class="tool-card">
+            {% if tool.image_path %}
+            <img src="{{ url_for('static', filename=tool.image_path) }}" alt="{{ tool.name }}" class="tool-image">
+            {% else %}
+            <div class="tool-image placeholder">🔧</div>
+            {% endif %}
+            <div class="tool-info">
+                <div class="tool-name">{{ tool.name }}</div>
+                <div class="tool-meta">
+                    {% if tool.brand %}<div class="tool-brand">{{ tool.brand }}</div>{% endif %}
+                    {% if tool.category %}<div>{{ tool.category }}</div>{% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

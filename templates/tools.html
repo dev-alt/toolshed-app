@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Tools - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Tools Inventory</h1>
+    <a href="{{ url_for('add_tool') }}" class="btn btn-primary">+ Add Tool</a>
+</div>
+
+<!-- Search and Filter -->
+<div class="search-bar">
+    <form method="GET" action="{{ url_for('tools') }}" style="display: flex; gap: 15px; width: 100%;">
+        <input type="text" 
+               name="search" 
+               class="search-input" 
+               placeholder="Search tools, brands, models..." 
+               value="{{ search }}">
+        
+        <select name="category" class="form-select" style="min-width: 200px;">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.category }}" {% if cat.category == current_category %}selected{% endif %}>
+                {{ cat.category }}
+            </option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit" class="btn">Search</button>
+        {% if search or current_category %}
+        <a href="{{ url_for('tools') }}" class="btn">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if tools %}
+<div class="tool-grid">
+    {% for tool in tools %}
+    <a href="{{ url_for('tool_detail', tool_id=tool.id) }}" class="tool-card">
+        {% if tool.image_path %}
+        <img src="{{ url_for('static', filename=tool.image_path) }}" alt="{{ tool.name }}" class="tool-image">
+        {% else %}
+        <div class="tool-image placeholder">🔧</div>
+        {% endif %}
+        <div class="tool-info">
+            <div class="tool-name">{{ tool.name }}</div>
+            <div class="tool-meta">
+                {% if tool.brand %}<div class="tool-brand">{{ tool.brand }} {% if tool.model %}{{ tool.model }}{% endif %}</div>{% endif %}
+                {% if tool.category %}<div>{{ tool.category }}</div>{% endif %}
+                {% if tool.location %}<div>📍 {{ tool.location }}</div>{% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center" style="padding: 60px 20px;">
+    <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
+    <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 10px;">No tools found</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+        {% if search or current_category %}
+        Try adjusting your search or filters
+        {% else %}
+        Start by adding your first tool
+        {% endif %}
+    </p>
+    <a href="{{ url_for('add_tool') }}" class="btn btn-primary">Add Your First Tool</a>
+</div>
+{% endif %}
+{% endblock %}

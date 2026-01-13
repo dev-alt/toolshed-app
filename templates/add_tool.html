@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Add Tool - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Add New Tool</h1>
+    <a href="{{ url_for('tools') }}" class="btn">Cancel</a>
+</div>
+
+<div style="max-width: 800px;">
+    <form method="POST" action="{{ url_for('add_tool') }}" enctype="multipart/form-data">
+        <div style="background: var(--bg-secondary); border: 2px solid var(--border); padding: 30px;">
+            
+            <div class="form-group">
+                <label class="form-label" for="name">Tool Name *</label>
+                <input type="text" id="name" name="name" class="form-input" required>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="brand">Brand</label>
+                    <input type="text" id="brand" name="brand" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="model">Model</label>
+                    <input type="text" id="model" name="model" class="form-input">
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category</label>
+                    <select id="category" name="category" class="form-select">
+                        <option value="">Select Category</option>
+                        <option value="Power Tool">Power Tool</option>
+                        <option value="Hand Tool">Hand Tool</option>
+                        <option value="Measuring Tool">Measuring Tool</option>
+                        <option value="Cutting Tool">Cutting Tool</option>
+                        <option value="Fastening Tool">Fastening Tool</option>
+                        <option value="Sanding Tool">Sanding Tool</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="condition">Condition</label>
+                    <select id="condition" name="condition" class="form-select">
+                        <option value="New">New</option>
+                        <option value="Good" selected>Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Needs Repair">Needs Repair</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="purchase_date">Purchase Date</label>
+                    <input type="date" id="purchase_date" name="purchase_date" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="purchase_price">Purchase Price (NZD)</label>
+                    <input type="number" id="purchase_price" name="purchase_price" 
+                           class="form-input" step="0.01" min="0">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="location">Storage Location</label>
+                <input type="text" id="location" name="location" class="form-input" 
+                       placeholder="e.g., Workshop drawer 3, Toolbox, Shelf A">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="bunnings_url">Bunnings URL</label>
+                <input type="url" id="bunnings_url" name="bunnings_url" class="form-input"
+                       placeholder="https://www.bunnings.co.nz/...">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="manual_url">Manual/Datasheet URL</label>
+                <input type="url" id="manual_url" name="manual_url" class="form-input"
+                       placeholder="https://...">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-textarea" 
+                          placeholder="Additional information, maintenance notes, specifications..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="image">Tool Image</label>
+                <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Accepted formats: PNG, JPG, GIF, WebP (Max 16MB)
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">Add Tool</button>
+                <a href="{{ url_for('tools') }}" class="btn">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

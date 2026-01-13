@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tool.name }} - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">{{ tool.name }}</h1>
+    <div class="flex gap-20">
+        <a href="{{ url_for('edit_tool', tool_id=tool.id) }}" class="btn">Edit</a>
+        <form method="POST" action="{{ url_for('delete_tool', tool_id=tool.id) }}" style="display: inline;"
+              onsubmit="return confirm('Are you sure you want to delete this tool?');">
+            <button type="submit" class="btn" style="border-color: var(--danger); color: var(--danger);">Delete</button>
+        </form>
+        <a href="{{ url_for('tools') }}" class="btn">Back to Tools</a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-bottom: 50px;">
+    <!-- Tool Image -->
+    <div>
+        {% if tool.image_path %}
+        <img src="{{ url_for('static', filename=tool.image_path) }}" 
+             alt="{{ tool.name }}" 
+             style="width: 100%; border: 2px solid var(--border); background: var(--bg-secondary);">
+        {% else %}
+        <div style="width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
+                    background: var(--bg-secondary); border: 2px solid var(--border); font-size: 80px;">
+            🔧
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tool Information -->
+    <div>
+        <div style="background: var(--bg-secondary); border: 2px solid var(--border); padding: 30px;">
+            <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 20px; 
+                       color: var(--accent-orange);">Details</h2>
+            
+            <div style="display: grid; gap: 15px;">
+                {% if tool.brand %}
+                <div>
+                    <div class="form-label">Brand</div>
+                    <div style="font-size: 16px;">{{ tool.brand }}</div>
+                </div>
+                {% endif %}
+                
+                {% if tool.model %}
+                <div>
+                    <div class="form-label">Model</div>
+                    <div style="font-size: 16px;">{{ tool.model }}</div>
+                </div>
+                {% endif %}
+                
+                {% if tool.category %}
+                <div>
+                    <div class="form-label">Category</div>
+                    <div style="font-size: 16px;">{{ tool.category }}</div>
+                </div>
+                {% endif %}
+                
+                {% if tool.condition %}
+                <div>
+                    <div class="form-label">Condition</div>
+                    <div style="font-size: 16px;">{{ tool.condition }}</div>
+                </div>
+                {% endif %}
+                
+                {% if tool.location %}
+                <div>
+                    <div class="form-label">Location</div>
+                    <div style="font-size: 16px;">📍 {{ tool.location }}</div>
+                </div>
+                {% endif %}
+                
+                {% if tool.purchase_date %}
+                <div>
+                    <div class="form-label">Purchase Date</div>
+                    <div style="font-size: 16px;">{{ tool.purchase_date }}</div>
+                </div>
+                {% endif %}
+                
+                {% if tool.purchase_price %}
+                <div>
+                    <div class="form-label">Purchase Price</div>
+                    <div style="font-size: 16px; color: var(--accent-yellow);">
+                        ${{ "%.2f"|format(tool.purchase_price) }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if tool.notes %}
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border);">
+                <div class="form-label">Notes</div>
+                <div style="font-size: 14px; line-height: 1.8;">{{ tool.notes }}</div>
+            </div>
+            {% endif %}
+            
+            <!-- Quick Links -->
+            <div style="margin-top: 25px; display: flex; gap: 15px;">
+                {% if tool.bunnings_url %}
+                <a href="{{ tool.bunnings_url }}" target="_blank" class="btn" style="font-size: 12px; padding: 10px 20px;">
+                    🛒 Bunnings
+                </a>
+                {% endif %}
+                
+                {% if tool.manual_url %}
+                <a href="{{ tool.manual_url }}" target="_blank" class="btn" style="font-size: 12px; padding: 10px 20px;">
+                    📖 Manual
+                </a>
+                {% endif %}
+                
+                <a href="https://www.bunnings.co.nz/search?q={{ tool.name | urlencode }}" 
+                   target="_blank" 
+                   class="btn" 
+                   style="font-size: 12px; padding: 10px 20px;">
+                    🔍 Find Accessories
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if compatible %}
+<div>
+    <h2 class="section-header">Compatible Consumables</h2>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in compatible %}
+                <tr>
+                    <td style="font-weight: 600;">{{ item.name }}</td>
+                    <td>{{ item.category }}</td>
+                    <td>
+                        <span {% if item.quantity <= item.min_quantity %}style="color: var(--warning);"{% endif %}>
+                            {{ item.quantity }} {{ item.unit }}
+                        </span>
+                    </td>
+                    <td>{{ item.location or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

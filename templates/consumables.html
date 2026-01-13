@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Consumables - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Consumables</h1>
+    <a href="{{ url_for('add_consumable') }}" class="btn btn-primary">+ Add Consumable</a>
+</div>
+
+{% if consumables %}
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Min Stock</th>
+                <th>Location</th>
+                <th>Compatible With</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in consumables %}
+            <tr>
+                <td style="font-weight: 600;">{{ item.name }}</td>
+                <td>{{ item.category or '-' }}</td>
+                <td>
+                    <span {% if item.quantity <= item.min_quantity %}style="color: var(--warning); font-weight: 600;"{% endif %}>
+                        {{ item.quantity }} {{ item.unit }}
+                        {% if item.quantity <= item.min_quantity %}⚠️{% endif %}
+                    </span>
+                </td>
+                <td>{{ item.min_quantity }} {{ item.unit }}</td>
+                <td>{{ item.location or '-' }}</td>
+                <td style="font-size: 12px; color: var(--text-secondary);">{{ item.compatible_with or '-' }}</td>
+                <td>
+                    {% if item.purchase_url %}
+                    <a href="{{ item.purchase_url }}" target="_blank" style="color: var(--accent-orange); text-decoration: none;">
+                        🛒 Buy
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center" style="padding: 60px 20px;">
+    <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
+    <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 10px;">No consumables tracked</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+        Start tracking your drill bits, blades, discs, and other consumables
+    </p>
+    <a href="{{ url_for('add_consumable') }}" class="btn btn-primary">Add First Consumable</a>
+</div>
+{% endif %}
+{% endblock %}
