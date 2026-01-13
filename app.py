@@ -549,6 +549,46 @@ def fastener_wizard():
     """Interactive wizard for adding fasteners"""
     return render_template('fastener_wizard.html')
 
+@app.route('/fastener/batch-add', methods=['POST'])
+def batch_add_fasteners():
+    """Add multiple fasteners at once from wizard"""
+    conn = get_db()
+    c = conn.cursor()
+
+    # Get form data
+    data = request.get_json()
+    fasteners = data.get('fasteners', [])
+
+    added_count = 0
+    for fastener in fasteners:
+        try:
+            c.execute('''
+                INSERT INTO fasteners (category, size, length, material, head_type, thread_type,
+                                     quantity, min_quantity, location, notes, image_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                fastener.get('category'),
+                fastener.get('size'),
+                fastener.get('length'),
+                fastener.get('material'),
+                fastener.get('head_type'),
+                fastener.get('thread_type'),
+                fastener.get('quantity', 0),
+                fastener.get('min_quantity', 0),
+                fastener.get('location'),
+                fastener.get('notes'),
+                None  # image_path - not supported in batch mode
+            ))
+            added_count += 1
+        except Exception as e:
+            print(f"Error adding fastener: {e}")
+            continue
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'count': added_count})
+
 @app.route('/fastener/<int:fastener_id>/edit', methods=['GET', 'POST'])
 def edit_fastener(fastener_id):
     """Edit a fastener"""
@@ -608,6 +648,18 @@ def delete_fastener(fastener_id):
     conn.close()
 
     return redirect(url_for('fasteners'))
+
+@app.route('/fastener/<int:fastener_id>/duplicate')
+def duplicate_fastener(fastener_id):
+    """Duplicate a fastener (pre-fill form with existing data)"""
+    conn = get_db()
+    fastener = conn.execute('SELECT * FROM fasteners WHERE id = ?', (fastener_id,)).fetchone()
+    conn.close()
+
+    if not fastener:
+        return redirect(url_for('fasteners'))
+
+    return render_template('add_fastener.html', fastener=fastener, is_duplicate=True)
 
 @app.route('/api/autocomplete/brands')
 def autocomplete_brands():

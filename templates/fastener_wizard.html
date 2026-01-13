@@ -76,52 +76,60 @@
 
         <!-- Step 3: Size -->
         <div class="wizard-step" data-step="3">
-            <h2 style="font-size: 24px; margin-bottom: 20px; text-align: center;">What size?</h2>
+            <h2 style="font-size: 24px; margin-bottom: 10px; text-align: center;">What size?</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">✨ Select multiple sizes to add them all at once</p>
+            <div id="size-count" style="text-align: center; color: var(--primary); font-weight: 600; margin-bottom: 20px; min-height: 24px;"></div>
             <div style="background: var(--bg-secondary); padding: 30px; border: 2px solid var(--border); margin-bottom: 20px;">
                 <input type="text" id="size-input" class="form-input"
-                       placeholder="Type size: M4, M5, M6, #8, #10, 1/4&quot;..."
+                       placeholder="Type size: M4, M5, M6, #8, #10, 1/4&quot;... (press Enter to add)"
                        style="font-size: 18px; text-align: center;">
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
-                <button type="button" class="wizard-option size-option" data-value="M3">M3</button>
-                <button type="button" class="wizard-option size-option" data-value="M4">M4</button>
-                <button type="button" class="wizard-option size-option" data-value="M5">M5</button>
-                <button type="button" class="wizard-option size-option" data-value="M6">M6</button>
-                <button type="button" class="wizard-option size-option" data-value="M8">M8</button>
-                <button type="button" class="wizard-option size-option" data-value="M10">M10</button>
-                <button type="button" class="wizard-option size-option" data-value="#6">#6</button>
-                <button type="button" class="wizard-option size-option" data-value="#8">#8</button>
-                <button type="button" class="wizard-option size-option" data-value="#10">#10</button>
-                <button type="button" class="wizard-option size-option" data-value="#12">#12</button>
-                <button type="button" class="wizard-option size-option" data-value="1/4&quot;">1/4"</button>
-                <button type="button" class="wizard-option size-option" data-value="5/16&quot;">5/16"</button>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <button type="button" class="wizard-option size-option multi-select" data-value="M3">M3</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="M4">M4</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="M5">M5</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="M6">M6</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="M8">M8</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="M10">M10</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="#6">#6</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="#8">#8</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="#10">#10</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="#12">#12</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="1/4&quot;">1/4"</button>
+                <button type="button" class="wizard-option size-option multi-select" data-value="5/16&quot;">5/16"</button>
+            </div>
+            <div style="text-align: center;">
+                <button type="button" id="size-next-btn" class="btn btn-primary" style="display: none; min-width: 200px;" onclick="goToStep(4)">Next with <span id="size-selected-count">0</span> sizes →</button>
             </div>
         </div>
 
         <!-- Step 4: Length -->
         <div class="wizard-step" data-step="4">
-            <h2 style="font-size: 24px; margin-bottom: 20px; text-align: center;">What length?</h2>
+            <h2 style="font-size: 24px; margin-bottom: 10px; text-align: center;">What length?</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">✨ Select multiple lengths to add them all at once</p>
+            <div id="length-count" style="text-align: center; color: var(--primary); font-weight: 600; margin-bottom: 20px; min-height: 24px;"></div>
             <div style="background: var(--bg-secondary); padding: 30px; border: 2px solid var(--border); margin-bottom: 20px;">
                 <input type="text" id="length-input" class="form-input"
-                       placeholder="Type length: 10mm, 25mm, 1&quot;, 2&quot;..."
+                       placeholder="Type length: 10mm, 25mm, 1&quot;, 2&quot;... (press Enter to add)"
                        style="font-size: 18px; text-align: center;">
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
-                <button type="button" class="wizard-option length-option" data-value="10mm">10mm</button>
-                <button type="button" class="wizard-option length-option" data-value="15mm">15mm</button>
-                <button type="button" class="wizard-option length-option" data-value="20mm">20mm</button>
-                <button type="button" class="wizard-option length-option" data-value="25mm">25mm</button>
-                <button type="button" class="wizard-option length-option" data-value="30mm">30mm</button>
-                <button type="button" class="wizard-option length-option" data-value="40mm">40mm</button>
-                <button type="button" class="wizard-option length-option" data-value="50mm">50mm</button>
-                <button type="button" class="wizard-option length-option" data-value="1&quot;">1"</button>
-                <button type="button" class="wizard-option length-option" data-value="1.5&quot;">1.5"</button>
-                <button type="button" class="wizard-option length-option" data-value="2&quot;">2"</button>
-                <button type="button" class="wizard-option length-option" data-value="2.5&quot;">2.5"</button>
-                <button type="button" class="wizard-option length-option" data-value="3&quot;">3"</button>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <button type="button" class="wizard-option length-option multi-select" data-value="10mm">10mm</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="15mm">15mm</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="20mm">20mm</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="25mm">25mm</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="30mm">30mm</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="40mm">40mm</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="50mm">50mm</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="1&quot;">1"</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="1.5&quot;">1.5"</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="2&quot;">2"</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="2.5&quot;">2.5"</button>
+                <button type="button" class="wizard-option length-option multi-select" data-value="3&quot;">3"</button>
             </div>
-            <div style="text-align: center; margin-top: 15px;">
-                <button type="button" class="wizard-option" onclick="skipStep()" style="display: inline-block; min-width: 200px;">Skip (N/A)</button>
+            <div style="text-align: center; display: flex; gap: 15px; justify-content: center;">
+                <button type="button" id="length-next-btn" class="btn btn-primary" style="display: none; min-width: 200px;" onclick="goToStep(5)">Next with <span id="length-selected-count">0</span> lengths →</button>
+                <button type="button" class="btn" onclick="skipLengthStep()" style="min-width: 150px;">Skip (N/A)</button>
             </div>
         </div>
 
@@ -159,7 +167,8 @@
 
         <!-- Step 7: Final Details -->
         <div class="wizard-step" data-step="7">
-            <h2 style="font-size: 24px; margin-bottom: 20px; text-align: center;">Almost done! Add quantity and location</h2>
+            <h2 style="font-size: 24px; margin-bottom: 10px; text-align: center;">Almost done! Add quantity and location</h2>
+            <p id="fastener-count-message" style="text-align: center; color: var(--primary); font-weight: 600; font-size: 18px; margin-bottom: 30px;"></p>
 
             <!-- Summary Box -->
             <div style="background: var(--bg-primary); border: 2px solid var(--primary); padding: 20px; margin-bottom: 30px;">
@@ -248,8 +257,8 @@ let currentStep = 1;
 let selections = {
     mainType: '',
     category: '',
-    size: '',
-    length: '',
+    sizes: [],  // Changed to array for multi-select
+    lengths: [], // Changed to array for multi-select
     material: '',
     headType: '',
     threadType: '',
@@ -276,6 +285,7 @@ const subtypes = {
 
 document.addEventListener('DOMContentLoaded', function() {
     updateProgress();
+    loadLastLocation();
 
     // Handle main category buttons
     document.querySelectorAll('[data-step="1"] .wizard-option').forEach(btn => {
@@ -285,7 +295,6 @@ document.addEventListener('DOMContentLoaded', function() {
             selections.mainType = value;
 
             if (nextStep === 2) {
-                // Show subtypes
                 showSubtypes(value);
                 goToStep(2);
             } else {
@@ -295,33 +304,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Handle size input
+    // Handle size multi-select
     document.getElementById('size-input').addEventListener('keyup', function(e) {
         if (e.key === 'Enter' && this.value.trim()) {
-            selections.size = this.value.trim();
-            goToStep(4);
+            toggleSize(this.value.trim());
+            this.value = '';
         }
     });
 
-    document.querySelectorAll('.size-option').forEach(btn => {
+    document.querySelectorAll('.size-option.multi-select').forEach(btn => {
         btn.addEventListener('click', function() {
-            selections.size = this.dataset.value;
-            goToStep(4);
+            toggleSize(this.dataset.value);
         });
     });
 
-    // Handle length input
+    // Handle length multi-select
     document.getElementById('length-input').addEventListener('keyup', function(e) {
         if (e.key === 'Enter' && this.value.trim()) {
-            selections.length = this.value.trim();
-            goToStep(5);
+            toggleLength(this.value.trim());
+            this.value = '';
         }
     });
 
-    document.querySelectorAll('.length-option').forEach(btn => {
+    document.querySelectorAll('.length-option.multi-select').forEach(btn => {
         btn.addEventListener('click', function() {
-            selections.length = this.dataset.value;
-            goToStep(5);
+            toggleLength(this.dataset.value);
         });
     });
 
@@ -360,19 +367,86 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle form submission
     document.getElementById('wizard-form').addEventListener('submit', function(e) {
-        // Fill hidden fields
-        document.getElementById('final-category').value = selections.category;
-        document.getElementById('final-size').value = selections.size;
-        document.getElementById('final-length').value = selections.length;
-        document.getElementById('final-material').value = selections.material;
-        document.getElementById('final-head-type').value = selections.headType;
-        document.getElementById('final-thread-type').value = selections.threadType;
-        document.getElementById('final-quantity').value = selections.quantity;
-        document.getElementById('final-min-quantity').value = selections.minQuantity;
-        document.getElementById('final-location').value = selections.location;
-        document.getElementById('final-notes').value = selections.notes;
+        e.preventDefault();
+        submitBatch();
     });
 });
+
+function toggleSize(value) {
+    const index = selections.sizes.indexOf(value);
+    if (index > -1) {
+        selections.sizes.splice(index, 1);
+    } else {
+        selections.sizes.push(value);
+    }
+    updateSizeUI();
+}
+
+function toggleLength(value) {
+    const index = selections.lengths.indexOf(value);
+    if (index > -1) {
+        selections.lengths.splice(index, 1);
+    } else {
+        selections.lengths.push(value);
+    }
+    updateLengthUI();
+}
+
+function updateSizeUI() {
+    document.querySelectorAll('.size-option').forEach(btn => {
+        if (selections.sizes.includes(btn.dataset.value)) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+
+    const count = selections.sizes.length;
+    const countEl = document.getElementById('size-count');
+    const nextBtn = document.getElementById('size-next-btn');
+    const selectedCountEl = document.getElementById('size-selected-count');
+
+    if (count > 0) {
+        countEl.textContent = 'Selected: ' + selections.sizes.join(', ');
+        nextBtn.style.display = 'block';
+        selectedCountEl.textContent = count;
+    } else {
+        countEl.textContent = '';
+        nextBtn.style.display = 'none';
+    }
+}
+
+function updateLengthUI() {
+    document.querySelectorAll('.length-option').forEach(btn => {
+        if (selections.lengths.includes(btn.dataset.value)) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+
+    const count = selections.lengths.length;
+    const countEl = document.getElementById('length-count');
+    const nextBtn = document.getElementById('length-next-btn');
+    const selectedCountEl = document.getElementById('length-selected-count');
+
+    if (count > 0) {
+        countEl.textContent = 'Selected: ' + selections.lengths.join(', ');
+        nextBtn.style.display = 'block';
+        selectedCountEl.textContent = count;
+    } else {
+        countEl.textContent = '';
+        nextBtn.style.display = 'none';
+    }
+}
+
+function loadLastLocation() {
+    const lastLocation = localStorage.getItem('lastFastenerLocation');
+    if (lastLocation) {
+        document.getElementById('loc-input').value = lastLocation;
+        selections.location = lastLocation;
+    }
+}
 
 function showSubtypes(mainType) {
     const container = document.getElementById('subtypes-container');
@@ -430,6 +504,11 @@ function skipStep() {
     goToStep(currentStep + 1);
 }
 
+function skipLengthStep() {
+    selections.lengths = [];
+    goToStep(5);
+}
+
 function updateProgress() {
     const progress = (currentStep / 7) * 100;
     document.getElementById('progress-bar').style.width = progress + '%';
@@ -444,11 +523,11 @@ function updateSummary() {
     if (selections.category) {
         html += `<strong>Type:</strong><span>${selections.category}</span>`;
     }
-    if (selections.size) {
-        html += `<strong>Size:</strong><span>${selections.size}</span>`;
+    if (selections.sizes.length > 0) {
+        html += `<strong>Sizes:</strong><span>${selections.sizes.join(', ')}</span>`;
     }
-    if (selections.length) {
-        html += `<strong>Length:</strong><span>${selections.length}</span>`;
+    if (selections.lengths.length > 0) {
+        html += `<strong>Lengths:</strong><span>${selections.lengths.join(', ')}</span>`;
     }
     if (selections.material) {
         html += `<strong>Material:</strong><span>${selections.material}</span>`;
@@ -458,6 +537,84 @@ function updateSummary() {
     }
 
     summary.innerHTML = html;
+    updateFastenerCount();
+}
+
+function updateFastenerCount() {
+    const sizeCount = selections.sizes.length || 1;
+    const lengthCount = selections.lengths.length || 1;
+    const totalCount = sizeCount * lengthCount;
+
+    const message = document.getElementById('fastener-count-message');
+    if (totalCount > 1) {
+        message.textContent = `You're about to add ${totalCount} fastener entries (${sizeCount} size${sizeCount > 1 ? 's' : ''} × ${lengthCount} length${lengthCount > 1 ? 's' : ''})`;
+    } else {
+        message.textContent = `You're about to add 1 fastener entry`;
+    }
+}
+
+function saveLastLocation() {
+    if (selections.location) {
+        localStorage.setItem('lastFastenerLocation', selections.location);
+    }
+}
+
+async function submitBatch() {
+    // Save location for next time
+    saveLastLocation();
+
+    // Create all combinations of sizes and lengths
+    const fasteners = [];
+    const sizes = selections.sizes.length > 0 ? selections.sizes : [''];
+    const lengths = selections.lengths.length > 0 ? selections.lengths : [''];
+
+    for (const size of sizes) {
+        for (const length of lengths) {
+            fasteners.push({
+                category: selections.category,
+                size: size,
+                length: length || null,
+                material: selections.material || null,
+                head_type: selections.headType || null,
+                thread_type: selections.threadType || null,
+                quantity: parseInt(selections.quantity) || 0,
+                min_quantity: selections.minQuantity ? parseInt(selections.minQuantity) : null,
+                location: selections.location || null,
+                notes: selections.notes || null
+            });
+        }
+    }
+
+    // Show loading state
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding...';
+
+    try {
+        const response = await fetch('/fastener/batch-add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fasteners: fasteners })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            window.location.href = '/fasteners';
+        } else {
+            alert('Error adding fasteners. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error adding fasteners. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
 }
 </script>
 {% endblock %}
