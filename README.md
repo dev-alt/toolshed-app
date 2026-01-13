@@ -1,3 +1,7 @@
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![Flask](https://img.shields.io/badge/flask-3.0.0-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
 # Toolshed App 🔧
 
 A distinctive industrial-styled web application for managing your workshop tools, consumables, and materials. Built with Flask and SQLite.
