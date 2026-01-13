@@ -2,27 +2,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-    /* Glassmorphism color palette */
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-glass: rgba(30, 41, 59, 0.7);
-    --bg-glass-hover: rgba(30, 41, 59, 0.85);
+    /* Light glassmorphism color palette */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #f1f5f9;
+    --bg-glass: rgba(255, 255, 255, 0.8);
+    --bg-glass-hover: rgba(255, 255, 255, 0.95);
     --accent-primary: #f97316;
     --accent-secondary: #fb923c;
     --accent-blue: #3b82f6;
     --accent-purple: #a855f7;
     --accent-cyan: #06b6d4;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
     --text-muted: #64748b;
-    --border-glass: rgba(148, 163, 184, 0.2);
+    --border-glass: rgba(148, 163, 184, 0.3);
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
-    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.25);
-    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.35);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
     --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.3);
 
     /* Typography */
@@ -38,7 +38,7 @@
 }
 
 body {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%);
     background-attachment: fixed;
     color: var(--text-primary);
     font-family: var(--font-body);
@@ -48,7 +48,7 @@ body {
     font-weight: 400;
 }
 
-/* Animated vibrant background gradients */
+/* Animated vibrant background gradients - light theme */
 body::before {
     content: '';
     position: fixed;
@@ -57,9 +57,9 @@ body::before {
     width: 200%;
     height: 200%;
     background:
-        radial-gradient(circle at 20% 50%, rgba(249, 115, 22, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+        radial-gradient(circle at 20% 50%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
     animation: rotate-gradient 30s linear infinite;
     pointer-events: none;
     z-index: 0;
@@ -78,7 +78,7 @@ body::after {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
     pointer-events: none;
     z-index: 1;
 }
@@ -476,7 +476,7 @@ body::after {
     width: 100%;
     height: 240px;
     object-fit: cover;
-    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+    background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
     border-bottom: 1px solid var(--border-glass);
 }
 
@@ -486,7 +486,7 @@ body::after {
     justify-content: center;
     font-size: 56px;
     color: var(--text-muted);
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .tool-info {
@@ -685,7 +685,7 @@ body::after {
     font-size: 13px;
     padding: 20px;
     text-align: left;
-    background: rgba(15, 23, 42, 0.5);
+    background: rgba(241, 245, 249, 0.8);
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -707,7 +707,7 @@ body::after {
 }
 
 .table tbody tr:hover {
-    background: rgba(249, 115, 22, 0.05);
+    background: rgba(249, 115, 22, 0.08);
 }
 
 /* Low Stock Alert - Glass */
