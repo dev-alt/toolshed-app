@@ -13,15 +13,17 @@
 
 <!-- Low Stock Alert -->
 {% if low_stock %}
-<div style="background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); border: 2px solid var(--warning); padding: 20px; margin-bottom: 30px;">
-    <h3 style="margin: 0 0 15px 0; font-size: 18px; color: var(--warning);">⚠️ Low Stock Alert</h3>
-    <div style="display: grid; gap: 10px;">
+<div class="glass" style="padding: 24px; margin-bottom: 32px; border-radius: 16px; border-left: 4px solid var(--warning);">
+    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: var(--warning); font-family: var(--font-display);">⚠️ Low Stock Alert</h3>
+    <div style="display: grid; gap: 12px;">
         {% for item in low_stock %}
-        <div style="background: var(--bg-primary); padding: 12px; border-left: 3px solid var(--warning);">
-            <strong>{{ item.category }}</strong> - {{ item.size }}{% if item.length %} x {{ item.length }}{% endif %}
-            <span style="color: var(--warning); margin-left: 15px;">
-                {{ item.quantity }} remaining (min: {{ item.min_quantity }})
-            </span>
+        <div class="low-stock-item">
+            <div>
+                <div class="low-stock-name">{{ item.category }} - {{ item.size }}{% if item.length %} x {{ item.length }}{% endif %}</div>
+            </div>
+            <div class="low-stock-qty">
+                {{ item.quantity }} / {{ item.min_quantity }} min
+            </div>
         </div>
         {% endfor %}
     </div>
@@ -63,25 +65,25 @@
 </div>
 
 {% if fasteners %}
-<div style="overflow-x: auto;">
-    <table style="width: 100%; border-collapse: collapse; background: var(--bg-secondary);">
+<div class="table-container">
+    <table class="table">
         <thead>
-            <tr style="background: var(--bg-primary); text-align: left;">
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Image</th>
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Category</th>
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Size</th>
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Length</th>
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Material</th>
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Head Type</th>
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Stock</th>
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Location</th>
-                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Actions</th>
+            <tr>
+                <th>Image</th>
+                <th>Category</th>
+                <th>Size</th>
+                <th>Length</th>
+                <th>Material</th>
+                <th>Head Type</th>
+                <th>Stock</th>
+                <th>Location</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for fastener in fasteners %}
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 12px;">
+            <tr>
+                <td>
                     {% if fastener.image_path %}
                     <img src="{{ url_for('static', filename=fastener.image_path) }}"
                          alt="{{ fastener.category }}"
