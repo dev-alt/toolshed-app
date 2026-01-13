@@ -8,6 +8,7 @@
     <div class="flex gap-20">
         <a href="{{ url_for('add_tool') }}" class="btn btn-primary">+ Add Tool</a>
         <a href="{{ url_for('add_consumable') }}" class="btn">+ Add Consumable</a>
+        <a href="{{ url_for('fastener_wizard') }}" class="btn">✨ Add Fastener</a>
     </div>
 </div>
 
@@ -22,15 +23,22 @@
         <div class="stat-value">{{ consumable_count }}</div>
     </div>
     <div class="stat-card">
+        <div class="stat-label">Fasteners</div>
+        <div class="stat-value">{{ fastener_count }}</div>
+    </div>
+    <div class="stat-card">
         <div class="stat-label">Materials</div>
         <div class="stat-value">{{ material_count }}</div>
     </div>
 </div>
 
-{% if low_stock %}
+{% if low_stock_consumables or low_stock_fasteners %}
 <div class="mb-30">
     <h2 class="section-header">Low Stock Alerts</h2>
-    {% for item in low_stock %}
+
+    {% if low_stock_consumables %}
+    <h3 style="font-size: 18px; margin: 20px 0 10px 0; color: var(--primary);">Consumables</h3>
+    {% for item in low_stock_consumables %}
     <div class="low-stock-item">
         <div>
             <div class="low-stock-name">{{ item.name }}</div>
@@ -39,6 +47,20 @@
         <div class="low-stock-qty">{{ item.quantity }} {{ item.unit }}</div>
     </div>
     {% endfor %}
+    {% endif %}
+
+    {% if low_stock_fasteners %}
+    <h3 style="font-size: 18px; margin: 20px 0 10px 0; color: var(--primary);">Fasteners</h3>
+    {% for item in low_stock_fasteners %}
+    <div class="low-stock-item">
+        <div>
+            <div class="low-stock-name">{{ item.category }} - {{ item.size }}{% if item.length %} x {{ item.length }}{% endif %}</div>
+            <div class="tool-meta">{% if item.material %}{{ item.material }}{% endif %}{% if item.head_type %} • {{ item.head_type }}{% endif %}</div>
+        </div>
+        <div class="low-stock-qty">{{ item.quantity }} pcs</div>
+    </div>
+    {% endfor %}
+    {% endif %}
 </div>
 {% endif %}
 

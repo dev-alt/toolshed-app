@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Add Fastener - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Add New Fastener</h1>
+    <a href="{{ url_for('fasteners') }}" class="btn">Cancel</a>
+</div>
+
+<div style="max-width: 800px;">
+    <form method="POST" action="{{ url_for('add_fastener') }}" enctype="multipart/form-data">
+        <div style="background: var(--bg-secondary); border: 2px solid var(--border); padding: 30px;">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category *</label>
+                    <select id="category" name="category" class="form-select" required>
+                        <option value="">Select Category</option>
+                        <option value="Wood Screw">Wood Screw</option>
+                        <option value="Machine Screw">Machine Screw</option>
+                        <option value="Self-Tapping Screw">Self-Tapping Screw</option>
+                        <option value="Sheet Metal Screw">Sheet Metal Screw</option>
+                        <option value="Drywall Screw">Drywall Screw</option>
+                        <option value="Deck Screw">Deck Screw</option>
+                        <option value="Concrete Screw">Concrete Screw</option>
+                        <option value="Bolt">Bolt</option>
+                        <option value="Hex Bolt">Hex Bolt</option>
+                        <option value="Carriage Bolt">Carriage Bolt</option>
+                        <option value="Eye Bolt">Eye Bolt</option>
+                        <option value="Nut">Nut</option>
+                        <option value="Washer">Washer</option>
+                        <option value="Lock Washer">Lock Washer</option>
+                        <option value="Anchor">Anchor</option>
+                        <option value="Rivet">Rivet</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="size">Size *</label>
+                    <input type="text" id="size" name="size" class="form-input" required
+                           placeholder="e.g., M6, 8-32, #10, 1/4&quot;">
+                    <div style="margin-top: 5px; font-size: 12px; color: var(--text-secondary);">
+                        Examples: M6, M8, #8, #10, 1/4", 5/16", 8-32, 10-24
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="length">Length</label>
+                    <input type="text" id="length" name="length" class="form-input"
+                           placeholder="e.g., 25mm, 1&quot;, 50mm">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="material">Material / Finish</label>
+                    <select id="material" name="material" class="form-select">
+                        <option value="">Select Material</option>
+                        <option value="Stainless Steel">Stainless Steel</option>
+                        <option value="Zinc Plated">Zinc Plated</option>
+                        <option value="Galvanized">Galvanized</option>
+                        <option value="Black Oxide">Black Oxide</option>
+                        <option value="Brass">Brass</option>
+                        <option value="Copper">Copper</option>
+                        <option value="Aluminum">Aluminum</option>
+                        <option value="Plain Steel">Plain Steel</option>
+                        <option value="Nylon">Nylon</option>
+                        <option value="Plastic">Plastic</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="head_type">Head / Drive Type</label>
+                    <select id="head_type" name="head_type" class="form-select">
+                        <option value="">Select Type</option>
+                        <option value="Phillips">Phillips</option>
+                        <option value="Flat Head">Flat Head (Slotted)</option>
+                        <option value="Hex">Hex</option>
+                        <option value="Torx">Torx</option>
+                        <option value="Robertson (Square)">Robertson (Square)</option>
+                        <option value="Pozidriv">Pozidriv</option>
+                        <option value="Allen (Hex Socket)">Allen (Hex Socket)</option>
+                        <option value="Pan Head">Pan Head</option>
+                        <option value="Button Head">Button Head</option>
+                        <option value="Countersunk">Countersunk</option>
+                        <option value="Round Head">Round Head</option>
+                        <option value="Truss Head">Truss Head</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="thread_type">Thread Type</label>
+                    <input type="text" id="thread_type" name="thread_type" class="form-input"
+                           placeholder="e.g., Coarse, Fine, UNC, UNF">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="quantity">Quantity</label>
+                    <input type="number" id="quantity" name="quantity" class="form-input"
+                           min="0" value="0" step="1">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="min_quantity">Minimum Quantity Alert</label>
+                    <input type="number" id="min_quantity" name="min_quantity" class="form-input"
+                           min="0" step="1" placeholder="e.g., 10">
+                    <div style="margin-top: 5px; font-size: 12px; color: var(--text-secondary);">
+                        Alert when stock is below this number
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="location">Storage Location</label>
+                <input type="text" id="location" name="location" class="form-input"
+                       placeholder="e.g., Drawer 3 Bin A2, Red organizer slot 15">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-textarea"
+                          placeholder="Additional notes, common uses, compatible tools..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="image">Image (Optional)</label>
+                <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Accepted formats: PNG, JPG, GIF, WebP (Max 16MB)
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">Add Fastener</button>
+                <a href="{{ url_for('fasteners') }}" class="btn">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

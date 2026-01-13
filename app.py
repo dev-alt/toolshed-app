@@ -80,7 +80,26 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
+
+    # Fasteners table (screws, bolts, nuts, washers, etc.)
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS fasteners (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT NOT NULL,
+            size TEXT NOT NULL,
+            length TEXT,
+            material TEXT,
+            head_type TEXT,
+            thread_type TEXT,
+            quantity INTEGER DEFAULT 0,
+            min_quantity INTEGER,
+            location TEXT,
+            notes TEXT,
+            image_path TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -174,34 +193,45 @@ def scrape_bunnings_search(query):
 def index():
     """Main dashboard"""
     conn = get_db()
-    
+
     # Get counts
     tool_count = conn.execute('SELECT COUNT(*) as count FROM tools').fetchone()['count']
     consumable_count = conn.execute('SELECT COUNT(*) as count FROM consumables').fetchone()['count']
+    fastener_count = conn.execute('SELECT COUNT(*) as count FROM fasteners').fetchone()['count']
     material_count = conn.execute('SELECT COUNT(*) as count FROM materials').fetchone()['count']
-    
+
     # Get low stock consumables
-    low_stock = conn.execute('''
-        SELECT * FROM consumables 
-        WHERE quantity <= min_quantity 
-        ORDER BY quantity ASC 
+    low_stock_consumables = conn.execute('''
+        SELECT * FROM consumables
+        WHERE quantity <= min_quantity
+        ORDER BY quantity ASC
         LIMIT 5
     ''').fetchall()
-    
+
+    # Get low stock fasteners
+    low_stock_fasteners = conn.execute('''
+        SELECT * FROM fasteners
+        WHERE min_quantity IS NOT NULL AND quantity <= min_quantity
+        ORDER BY quantity ASC
+        LIMIT 5
+    ''').fetchall()
+
     # Get recent tools
     recent_tools = conn.execute('''
-        SELECT * FROM tools 
-        ORDER BY created_at DESC 
+        SELECT * FROM tools
+        ORDER BY created_at DESC
         LIMIT 6
     ''').fetchall()
-    
+
     conn.close()
-    
-    return render_template('index.html', 
+
+    return render_template('index.html',
                          tool_count=tool_count,
                          consumable_count=consumable_count,
+                         fastener_count=fastener_count,
                          material_count=material_count,
-                         low_stock=low_stock,
+                         low_stock_consumables=low_stock_consumables,
+                         low_stock_fasteners=low_stock_fasteners,
                          recent_tools=recent_tools)
 
 @app.route('/tools')
@@ -417,8 +447,167 @@ def materials():
     conn = get_db()
     materials = conn.execute('SELECT * FROM materials ORDER BY name').fetchall()
     conn.close()
-    
+
     return render_template('materials.html', materials=materials)
+
+@app.route('/fasteners')
+def fasteners():
+    """List all fasteners with search and filter"""
+    conn = get_db()
+
+    # Get search parameters
+    search = request.args.get('search', '')
+    category = request.args.get('category', '')
+    location = request.args.get('location', '')
+
+    # Build query
+    query = 'SELECT * FROM fasteners WHERE 1=1'
+    params = []
+
+    if search:
+        query += ' AND (category LIKE ? OR size LIKE ? OR material LIKE ? OR head_type LIKE ? OR location LIKE ?)'
+        search_param = f'%{search}%'
+        params.extend([search_param] * 5)
+
+    if category:
+        query += ' AND category = ?'
+        params.append(category)
+
+    if location:
+        query += ' AND location LIKE ?'
+        params.append(f'%{location}%')
+
+    query += ' ORDER BY category, size, length'
+
+    fasteners = conn.execute(query, params).fetchall()
+
+    # Get unique categories and locations for filters
+    categories = conn.execute('SELECT DISTINCT category FROM fasteners WHERE category IS NOT NULL AND category != "" ORDER BY category').fetchall()
+    locations = conn.execute('SELECT DISTINCT location FROM fasteners WHERE location IS NOT NULL AND location != "" ORDER BY location').fetchall()
+
+    # Get low stock items (quantity <= min_quantity)
+    low_stock = conn.execute('''
+        SELECT * FROM fasteners
+        WHERE min_quantity IS NOT NULL AND quantity <= min_quantity
+        ORDER BY category, size
+    ''').fetchall()
+
+    conn.close()
+
+    return render_template('fasteners.html',
+                         fasteners=fasteners,
+                         categories=categories,
+                         locations=locations,
+                         low_stock=low_stock,
+                         search=search,
+                         current_category=category,
+                         current_location=location)
+
+@app.route('/fastener/add', methods=['GET', 'POST'])
+def add_fastener():
+    """Add a new fastener"""
+    if request.method == 'POST':
+        conn = get_db()
+        c = conn.cursor()
+
+        # Handle file upload
+        image_path = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_path = f"uploads/{filename}"
+
+        c.execute('''
+            INSERT INTO fasteners (category, size, length, material, head_type, thread_type,
+                                 quantity, min_quantity, location, notes, image_path)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            request.form.get('category'),
+            request.form.get('size'),
+            request.form.get('length'),
+            request.form.get('material'),
+            request.form.get('head_type'),
+            request.form.get('thread_type'),
+            request.form.get('quantity', 0),
+            request.form.get('min_quantity', 0),
+            request.form.get('location'),
+            request.form.get('notes'),
+            image_path
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('fasteners'))
+
+    return render_template('add_fastener.html')
+
+@app.route('/fastener/wizard')
+def fastener_wizard():
+    """Interactive wizard for adding fasteners"""
+    return render_template('fastener_wizard.html')
+
+@app.route('/fastener/<int:fastener_id>/edit', methods=['GET', 'POST'])
+def edit_fastener(fastener_id):
+    """Edit a fastener"""
+    conn = get_db()
+
+    if request.method == 'POST':
+        c = conn.cursor()
+
+        # Handle file upload
+        image_path = request.form.get('current_image')
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_path = f"uploads/{filename}"
+
+        c.execute('''
+            UPDATE fasteners
+            SET category = ?, size = ?, length = ?, material = ?, head_type = ?, thread_type = ?,
+                quantity = ?, min_quantity = ?, location = ?, notes = ?, image_path = ?
+            WHERE id = ?
+        ''', (
+            request.form.get('category'),
+            request.form.get('size'),
+            request.form.get('length'),
+            request.form.get('material'),
+            request.form.get('head_type'),
+            request.form.get('thread_type'),
+            request.form.get('quantity', 0),
+            request.form.get('min_quantity', 0),
+            request.form.get('location'),
+            request.form.get('notes'),
+            image_path,
+            fastener_id
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('fasteners'))
+
+    fastener = conn.execute('SELECT * FROM fasteners WHERE id = ?', (fastener_id,)).fetchone()
+    conn.close()
+
+    if not fastener:
+        return redirect(url_for('fasteners'))
+
+    return render_template('edit_fastener.html', fastener=fastener)
+
+@app.route('/fastener/<int:fastener_id>/delete', methods=['POST'])
+def delete_fastener(fastener_id):
+    """Delete a fastener"""
+    conn = get_db()
+    conn.execute('DELETE FROM fasteners WHERE id = ?', (fastener_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('fasteners'))
 
 @app.route('/api/autocomplete/brands')
 def autocomplete_brands():

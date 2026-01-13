@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ fastener.category }} {{ fastener.size }} - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Edit Fastener</h1>
+    <a href="{{ url_for('fasteners') }}" class="btn">Cancel</a>
+</div>
+
+<div style="max-width: 800px;">
+    <form method="POST" action="{{ url_for('edit_fastener', fastener_id=fastener.id) }}" enctype="multipart/form-data">
+        <input type="hidden" name="current_image" value="{{ fastener.image_path or '' }}">
+
+        <div style="background: var(--bg-secondary); border: 2px solid var(--border); padding: 30px;">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category *</label>
+                    <select id="category" name="category" class="form-select" required>
+                        <option value="">Select Category</option>
+                        <option value="Wood Screw" {% if fastener.category == "Wood Screw" %}selected{% endif %}>Wood Screw</option>
+                        <option value="Machine Screw" {% if fastener.category == "Machine Screw" %}selected{% endif %}>Machine Screw</option>
+                        <option value="Self-Tapping Screw" {% if fastener.category == "Self-Tapping Screw" %}selected{% endif %}>Self-Tapping Screw</option>
+                        <option value="Sheet Metal Screw" {% if fastener.category == "Sheet Metal Screw" %}selected{% endif %}>Sheet Metal Screw</option>
+                        <option value="Drywall Screw" {% if fastener.category == "Drywall Screw" %}selected{% endif %}>Drywall Screw</option>
+                        <option value="Deck Screw" {% if fastener.category == "Deck Screw" %}selected{% endif %}>Deck Screw</option>
+                        <option value="Concrete Screw" {% if fastener.category == "Concrete Screw" %}selected{% endif %}>Concrete Screw</option>
+                        <option value="Bolt" {% if fastener.category == "Bolt" %}selected{% endif %}>Bolt</option>
+                        <option value="Hex Bolt" {% if fastener.category == "Hex Bolt" %}selected{% endif %}>Hex Bolt</option>
+                        <option value="Carriage Bolt" {% if fastener.category == "Carriage Bolt" %}selected{% endif %}>Carriage Bolt</option>
+                        <option value="Eye Bolt" {% if fastener.category == "Eye Bolt" %}selected{% endif %}>Eye Bolt</option>
+                        <option value="Nut" {% if fastener.category == "Nut" %}selected{% endif %}>Nut</option>
+                        <option value="Washer" {% if fastener.category == "Washer" %}selected{% endif %}>Washer</option>
+                        <option value="Lock Washer" {% if fastener.category == "Lock Washer" %}selected{% endif %}>Lock Washer</option>
+                        <option value="Anchor" {% if fastener.category == "Anchor" %}selected{% endif %}>Anchor</option>
+                        <option value="Rivet" {% if fastener.category == "Rivet" %}selected{% endif %}>Rivet</option>
+                        <option value="Other" {% if fastener.category == "Other" %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="size">Size *</label>
+                    <input type="text" id="size" name="size" class="form-input" required
+                           value="{{ fastener.size or '' }}"
+                           placeholder="e.g., M6, 8-32, #10, 1/4&quot;">
+                    <div style="margin-top: 5px; font-size: 12px; color: var(--text-secondary);">
+                        Examples: M6, M8, #8, #10, 1/4", 5/16", 8-32, 10-24
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="length">Length</label>
+                    <input type="text" id="length" name="length" class="form-input"
+                           value="{{ fastener.length or '' }}"
+                           placeholder="e.g., 25mm, 1&quot;, 50mm">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="material">Material / Finish</label>
+                    <select id="material" name="material" class="form-select">
+                        <option value="">Select Material</option>
+                        <option value="Stainless Steel" {% if fastener.material == "Stainless Steel" %}selected{% endif %}>Stainless Steel</option>
+                        <option value="Zinc Plated" {% if fastener.material == "Zinc Plated" %}selected{% endif %}>Zinc Plated</option>
+                        <option value="Galvanized" {% if fastener.material == "Galvanized" %}selected{% endif %}>Galvanized</option>
+                        <option value="Black Oxide" {% if fastener.material == "Black Oxide" %}selected{% endif %}>Black Oxide</option>
+                        <option value="Brass" {% if fastener.material == "Brass" %}selected{% endif %}>Brass</option>
+                        <option value="Copper" {% if fastener.material == "Copper" %}selected{% endif %}>Copper</option>
+                        <option value="Aluminum" {% if fastener.material == "Aluminum" %}selected{% endif %}>Aluminum</option>
+                        <option value="Plain Steel" {% if fastener.material == "Plain Steel" %}selected{% endif %}>Plain Steel</option>
+                        <option value="Nylon" {% if fastener.material == "Nylon" %}selected{% endif %}>Nylon</option>
+                        <option value="Plastic" {% if fastener.material == "Plastic" %}selected{% endif %}>Plastic</option>
+                        <option value="Other" {% if fastener.material == "Other" %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="head_type">Head / Drive Type</label>
+                    <select id="head_type" name="head_type" class="form-select">
+                        <option value="">Select Type</option>
+                        <option value="Phillips" {% if fastener.head_type == "Phillips" %}selected{% endif %}>Phillips</option>
+                        <option value="Flat Head" {% if fastener.head_type == "Flat Head" %}selected{% endif %}>Flat Head (Slotted)</option>
+                        <option value="Hex" {% if fastener.head_type == "Hex" %}selected{% endif %}>Hex</option>
+                        <option value="Torx" {% if fastener.head_type == "Torx" %}selected{% endif %}>Torx</option>
+                        <option value="Robertson (Square)" {% if fastener.head_type == "Robertson (Square)" %}selected{% endif %}>Robertson (Square)</option>
+                        <option value="Pozidriv" {% if fastener.head_type == "Pozidriv" %}selected{% endif %}>Pozidriv</option>
+                        <option value="Allen (Hex Socket)" {% if fastener.head_type == "Allen (Hex Socket)" %}selected{% endif %}>Allen (Hex Socket)</option>
+                        <option value="Pan Head" {% if fastener.head_type == "Pan Head" %}selected{% endif %}>Pan Head</option>
+                        <option value="Button Head" {% if fastener.head_type == "Button Head" %}selected{% endif %}>Button Head</option>
+                        <option value="Countersunk" {% if fastener.head_type == "Countersunk" %}selected{% endif %}>Countersunk</option>
+                        <option value="Round Head" {% if fastener.head_type == "Round Head" %}selected{% endif %}>Round Head</option>
+                        <option value="Truss Head" {% if fastener.head_type == "Truss Head" %}selected{% endif %}>Truss Head</option>
+                        <option value="Other" {% if fastener.head_type == "Other" %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="thread_type">Thread Type</label>
+                    <input type="text" id="thread_type" name="thread_type" class="form-input"
+                           value="{{ fastener.thread_type or '' }}"
+                           placeholder="e.g., Coarse, Fine, UNC, UNF">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="quantity">Quantity</label>
+                    <input type="number" id="quantity" name="quantity" class="form-input"
+                           min="0" value="{{ fastener.quantity or 0 }}" step="1">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="min_quantity">Minimum Quantity Alert</label>
+                    <input type="number" id="min_quantity" name="min_quantity" class="form-input"
+                           min="0" step="1" value="{{ fastener.min_quantity or '' }}"
+                           placeholder="e.g., 10">
+                    <div style="margin-top: 5px; font-size: 12px; color: var(--text-secondary);">
+                        Alert when stock is below this number
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="location">Storage Location</label>
+                <input type="text" id="location" name="location" class="form-input"
+                       value="{{ fastener.location or '' }}"
+                       placeholder="e.g., Drawer 3 Bin A2, Red organizer slot 15">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-textarea"
+                          placeholder="Additional notes, common uses, compatible tools...">{{ fastener.notes or '' }}</textarea>
+            </div>
+
+            {% if fastener.image_path %}
+            <div class="form-group">
+                <label class="form-label">Current Image</label>
+                <img src="{{ url_for('static', filename=fastener.image_path) }}"
+                     alt="Current fastener image"
+                     style="max-width: 200px; border: 2px solid var(--border);">
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label" for="image">{% if fastener.image_path %}Replace Image{% else %}Add Image{% endif %} (Optional)</label>
+                <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Accepted formats: PNG, JPG, GIF, WebP (Max 16MB)
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">Update Fastener</button>
+                <a href="{{ url_for('fasteners') }}" class="btn">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

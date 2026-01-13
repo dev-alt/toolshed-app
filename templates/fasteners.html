@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Fasteners - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Fasteners Collection</h1>
+    <div style="display: flex; gap: 15px;">
+        <a href="{{ url_for('fastener_wizard') }}" class="btn btn-primary">✨ Quick Wizard</a>
+        <a href="{{ url_for('add_fastener') }}" class="btn">+ Manual Entry</a>
+    </div>
+</div>
+
+<!-- Low Stock Alert -->
+{% if low_stock %}
+<div style="background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); border: 2px solid var(--warning); padding: 20px; margin-bottom: 30px;">
+    <h3 style="margin: 0 0 15px 0; font-size: 18px; color: var(--warning);">⚠️ Low Stock Alert</h3>
+    <div style="display: grid; gap: 10px;">
+        {% for item in low_stock %}
+        <div style="background: var(--bg-primary); padding: 12px; border-left: 3px solid var(--warning);">
+            <strong>{{ item.category }}</strong> - {{ item.size }}{% if item.length %} x {{ item.length }}{% endif %}
+            <span style="color: var(--warning); margin-left: 15px;">
+                {{ item.quantity }} remaining (min: {{ item.min_quantity }})
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Search and Filter -->
+<div class="search-bar">
+    <form method="GET" action="{{ url_for('fasteners') }}" style="display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 15px;">
+        <input type="text"
+               name="search"
+               class="search-input"
+               placeholder="Search size, material, head type, location..."
+               value="{{ search }}">
+
+        <select name="category" class="form-select" style="min-width: 180px;">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.category }}" {% if cat.category == current_category %}selected{% endif %}>
+                {{ cat.category }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <select name="location" class="form-select" style="min-width: 150px;">
+            <option value="">All Locations</option>
+            {% for loc in locations %}
+            <option value="{{ loc.location }}" {% if loc.location == current_location %}selected{% endif %}>
+                {{ loc.location }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn">Search</button>
+        {% if search or current_category or current_location %}
+        <a href="{{ url_for('fasteners') }}" class="btn">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if fasteners %}
+<div style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; background: var(--bg-secondary);">
+        <thead>
+            <tr style="background: var(--bg-primary); text-align: left;">
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Image</th>
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Category</th>
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Size</th>
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Length</th>
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Material</th>
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Head Type</th>
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Stock</th>
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Location</th>
+                <th style="padding: 15px; border-bottom: 2px solid var(--border);">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fastener in fasteners %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px;">
+                    {% if fastener.image_path %}
+                    <img src="{{ url_for('static', filename=fastener.image_path) }}"
+                         alt="{{ fastener.category }}"
+                         style="width: 50px; height: 50px; object-fit: cover; border: 1px solid var(--border);">
+                    {% else %}
+                    <div style="width: 50px; height: 50px; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); font-size: 24px;">
+                        🔩
+                    </div>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px;">
+                    <div style="font-weight: 600;">{{ fastener.category }}</div>
+                    {% if fastener.thread_type %}
+                    <div style="font-size: 12px; color: var(--text-secondary);">{{ fastener.thread_type }}</div>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px;"><strong>{{ fastener.size }}</strong></td>
+                <td style="padding: 12px;">{{ fastener.length or '-' }}</td>
+                <td style="padding: 12px;">{{ fastener.material or '-' }}</td>
+                <td style="padding: 12px;">{{ fastener.head_type or '-' }}</td>
+                <td style="padding: 12px;">
+                    {% if fastener.min_quantity and fastener.quantity <= fastener.min_quantity %}
+                    <span style="color: var(--warning); font-weight: 600;">{{ fastener.quantity }}</span>
+                    {% else %}
+                    <span>{{ fastener.quantity }}</span>
+                    {% endif %}
+                    {% if fastener.min_quantity %}
+                    <span style="font-size: 12px; color: var(--text-secondary);"> / {{ fastener.min_quantity }} min</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px;">{{ fastener.location or '-' }}</td>
+                <td style="padding: 12px;">
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{{ url_for('edit_fastener', fastener_id=fastener.id) }}" class="btn" style="padding: 6px 12px; font-size: 13px;">Edit</a>
+                        <form method="POST" action="{{ url_for('delete_fastener', fastener_id=fastener.id) }}" style="margin: 0;" onsubmit="return confirm('Delete this fastener?');">
+                            <button type="submit" class="btn" style="padding: 6px 12px; font-size: 13px; background: var(--danger);">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center" style="padding: 60px 20px;">
+    <div style="font-size: 48px; margin-bottom: 20px;">🔩</div>
+    <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 10px;">No fasteners found</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+        {% if search or current_category or current_location %}
+        Try adjusting your search or filters
+        {% else %}
+        Start organizing your screw and bolt collection
+        {% endif %}
+    </p>
+    <a href="{{ url_for('add_fastener') }}" class="btn btn-primary">Add Your First Fastener</a>
+</div>
+{% endif %}
+{% endblock %}
