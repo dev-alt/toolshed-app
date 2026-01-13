@@ -9,6 +9,24 @@
 </div>
 
 <div style="max-width: 800px;">
+    <!-- Bunnings Search -->
+    <div style="background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%); border: 2px solid var(--border); padding: 25px; margin-bottom: 30px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 18px; color: var(--primary);">🔍 Quick Search Bunnings</h3>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="bunnings-search" class="form-input"
+                   placeholder="e.g., Ryobi drill, DeWalt saw, Makita sander..."
+                   style="flex: 1;">
+            <button type="button" onclick="searchBunnings()" class="btn btn-primary">Search</button>
+        </div>
+        <div id="search-status" style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);"></div>
+
+        <!-- Search Results -->
+        <div id="search-results" style="margin-top: 20px; display: none;">
+            <div style="font-weight: 600; margin-bottom: 10px; color: var(--primary);">Search Results:</div>
+            <div id="results-container" style="max-height: 400px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
     <form method="POST" action="{{ url_for('add_tool') }}" enctype="multipart/form-data">
         <div style="background: var(--bg-secondary); border: 2px solid var(--border); padding: 30px;">
             
@@ -20,12 +38,16 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
                     <label class="form-label" for="brand">Brand</label>
-                    <input type="text" id="brand" name="brand" class="form-input">
+                    <input type="text" id="brand" name="brand" class="form-input" list="brand-suggestions"
+                           autocomplete="off" placeholder="Start typing...">
+                    <datalist id="brand-suggestions"></datalist>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="model">Model</label>
-                    <input type="text" id="model" name="model" class="form-input">
+                    <input type="text" id="model" name="model" class="form-input" list="model-suggestions"
+                           autocomplete="off" placeholder="Start typing...">
+                    <datalist id="model-suggestions"></datalist>
                 </div>
             </div>
             
@@ -107,4 +129,196 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load autocomplete data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadBrandSuggestions();
+    loadModelSuggestions();
+
+    // Update model suggestions when brand changes
+    document.getElementById('brand').addEventListener('input', function() {
+        loadModelSuggestions(this.value);
+    });
+
+    // Allow Enter key to trigger search
+    document.getElementById('bunnings-search').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchBunnings();
+        }
+    });
+});
+
+// Load brand suggestions from database
+function loadBrandSuggestions() {
+    fetch('/api/autocomplete/brands')
+        .then(response => response.json())
+        .then(brands => {
+            const datalist = document.getElementById('brand-suggestions');
+            datalist.innerHTML = '';
+            brands.forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                datalist.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error loading brand suggestions:', error));
+}
+
+// Load model suggestions from database
+function loadModelSuggestions(brand = '') {
+    const url = brand ? `/api/autocomplete/models?brand=${encodeURIComponent(brand)}` : '/api/autocomplete/models';
+    fetch(url)
+        .then(response => response.json())
+        .then(models => {
+            const datalist = document.getElementById('model-suggestions');
+            datalist.innerHTML = '';
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                datalist.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error loading model suggestions:', error));
+}
+
+// Search Bunnings
+function searchBunnings() {
+    const query = document.getElementById('bunnings-search').value.trim();
+    if (!query) {
+        document.getElementById('search-status').textContent = 'Please enter a search term';
+        return;
+    }
+
+    const statusEl = document.getElementById('search-status');
+    const resultsEl = document.getElementById('search-results');
+    const containerEl = document.getElementById('results-container');
+
+    statusEl.textContent = 'Searching Bunnings...';
+    statusEl.style.color = 'var(--primary)';
+    resultsEl.style.display = 'none';
+
+    fetch(`/search/bunnings?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.products.length > 0) {
+                statusEl.textContent = `Found ${data.products.length} products`;
+                statusEl.style.color = 'var(--primary)';
+                containerEl.innerHTML = '';
+
+                data.products.forEach(product => {
+                    const card = createProductCard(product);
+                    containerEl.appendChild(card);
+                });
+
+                resultsEl.style.display = 'block';
+            } else if (data.success && data.products.length === 0) {
+                if (data.message) {
+                    statusEl.innerHTML = data.message;
+                } else {
+                    statusEl.textContent = 'No products found. Try a different search term.';
+                }
+                statusEl.style.color = 'var(--text-secondary)';
+                resultsEl.style.display = 'none';
+            } else {
+                statusEl.textContent = `Error: ${data.error || 'Failed to search Bunnings'}`;
+                statusEl.style.color = '#ff6b6b';
+                resultsEl.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error searching Bunnings:', error);
+            statusEl.textContent = 'Failed to connect to Bunnings. Please try again.';
+            statusEl.style.color = '#ff6b6b';
+            resultsEl.style.display = 'none';
+        });
+}
+
+// Create product card element
+function createProductCard(product) {
+    const card = document.createElement('div');
+    card.style.cssText = `
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        gap: 15px;
+        align-items: start;
+    `;
+    card.onmouseover = () => card.style.borderColor = 'var(--primary)';
+    card.onmouseout = () => card.style.borderColor = 'var(--border)';
+    card.onclick = () => fillFormFromProduct(product);
+
+    const imageHtml = product.image_url
+        ? `<img src="${product.image_url}" alt="${product.name}" style="width: 80px; height: 80px; object-fit: contain; border: 1px solid var(--border);">`
+        : '<div style="width: 80px; height: 80px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);">🔧</div>';
+
+    const priceHtml = product.price
+        ? `<div style="font-weight: 600; color: var(--primary); margin-top: 5px;">$${product.price.toFixed(2)} NZD</div>`
+        : '';
+
+    const brandHtml = product.brand
+        ? `<div style="color: var(--text-secondary); font-size: 13px;">Brand: ${product.brand}</div>`
+        : '';
+
+    card.innerHTML = `
+        ${imageHtml}
+        <div style="flex: 1;">
+            <div style="font-weight: 500; margin-bottom: 5px;">${product.name}</div>
+            ${brandHtml}
+            ${priceHtml}
+            <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                Click to auto-fill form ➜
+            </div>
+        </div>
+    `;
+
+    return card;
+}
+
+// Fill form from selected product
+function fillFormFromProduct(product) {
+    // Fill tool name
+    document.getElementById('name').value = product.name;
+
+    // Fill brand if available
+    if (product.brand) {
+        document.getElementById('brand').value = product.brand;
+        loadModelSuggestions(product.brand);
+    }
+
+    // Fill price if available
+    if (product.price) {
+        document.getElementById('purchase_price').value = product.price;
+    }
+
+    // Fill Bunnings URL
+    if (product.url) {
+        document.getElementById('bunnings_url').value = product.url;
+    }
+
+    // Scroll to form
+    document.getElementById('name').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Visual feedback
+    const statusEl = document.getElementById('search-status');
+    statusEl.textContent = '✓ Form filled! Review and adjust as needed, then submit.';
+    statusEl.style.color = 'var(--primary)';
+
+    // Highlight the name field
+    const nameField = document.getElementById('name');
+    nameField.style.background = 'rgba(255, 184, 0, 0.1)';
+    nameField.style.borderColor = 'var(--primary)';
+    setTimeout(() => {
+        nameField.style.background = '';
+        nameField.style.borderColor = '';
+    }, 2000);
+}
+</script>
 {% endblock %}

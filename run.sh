@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Starting Toolshed App..."
 echo "Installing dependencies..."
-pip install -r requirements.txt --break-system-packages --quiet
+pip3 install -r requirements.txt --quiet 2>/dev/null || pip3 install -r requirements.txt
 
 echo ""
 echo "Starting server..."
@@ -12,4 +12,4 @@ echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-python app.py
+python3 app.py

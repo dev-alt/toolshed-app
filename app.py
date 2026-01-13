@@ -3,6 +3,11 @@ import sqlite3
 import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
+import requests
+from bs4 import BeautifulSoup
+import re
+import json
+from urllib.parse import urlencode
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -83,6 +88,87 @@ def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def scrape_bunnings_search(query):
+    """
+    Search Bunnings NZ for products.
+    Note: Bunnings uses client-side rendering, so we return a search URL
+    and mock data for demonstration. For production, consider:
+    1. Using Playwright/Selenium for JS rendering
+    2. Using official Bunnings API if available
+    3. Manual entry with URL parser
+    """
+    try:
+        search_url = f"https://www.bunnings.co.nz/search/products?q={requests.utils.quote(query)}"
+
+        # For now, return the search URL and suggest opening it
+        # In a production app, you'd either:
+        # - Use Playwright to render JS
+        # - Use an official API
+        # - Parse a pasted product URL
+
+        # Try basic scraping as fallback but expect it might not work
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-NZ,en;q=0.9',
+        }
+
+        response = requests.get(search_url, headers=headers, timeout=10)
+        response.raise_for_status()
+
+        # Try to extract from script tags with product data
+        soup = BeautifulSoup(response.content, 'html.parser')
+        products = []
+
+        # Try to find JSON data in script tags
+        script_tags = soup.find_all('script', type='application/ld+json')
+        for script in script_tags:
+            try:
+                data = json.loads(script.string)
+                if data.get('@type') == 'Product' or data.get('@type') == 'ItemList':
+                    # Handle product list schema
+                    if 'itemListElement' in data:
+                        for item in data['itemListElement'][:10]:
+                            product_data = item.get('item', {})
+                            products.append({
+                                'name': product_data.get('name', ''),
+                                'brand': product_data.get('brand', {}).get('name'),
+                                'price': product_data.get('offers', {}).get('price'),
+                                'url': product_data.get('url', search_url),
+                                'image_url': product_data.get('image'),
+                                'source': 'Bunnings NZ'
+                            })
+            except:
+                continue
+
+        if products:
+            return {'success': True, 'products': products, 'search_url': search_url}
+
+        # If no products found, return helpful message with search URL
+        return {
+            'success': True,
+            'products': [],
+            'search_url': search_url,
+            'message': f'Unable to scrape Bunnings automatically. <a href="{search_url}" target="_blank" style="color: var(--primary); text-decoration: underline;">Click here to open Bunnings search</a> and manually enter product details.'
+        }
+
+    except requests.RequestException as e:
+        search_url = f"https://www.bunnings.co.nz/search/products?q={requests.utils.quote(query)}"
+        return {
+            'success': True,
+            'products': [],
+            'search_url': search_url,
+            'message': f'Could not fetch from Bunnings. <a href="{search_url}" target="_blank" style="color: var(--primary); text-decoration: underline;">Click here to search manually</a>.'
+        }
+    except Exception as e:
+        search_url = f"https://www.bunnings.co.nz/search/products?q={requests.utils.quote(query)}"
+        return {
+            'success': True,
+            'products': [],
+            'search_url': search_url,
+            'message': f'Error: {str(e)}. <a href="{search_url}" target="_blank" style="color: var(--primary); text-decoration: underline;">Open Bunnings search manually</a>.'
+        }
 
 @app.route('/')
 def index():
@@ -334,12 +420,47 @@ def materials():
     
     return render_template('materials.html', materials=materials)
 
+@app.route('/api/autocomplete/brands')
+def autocomplete_brands():
+    """Get list of unique brands from database for autocomplete"""
+    conn = get_db()
+    brands = conn.execute('''
+        SELECT DISTINCT brand FROM tools
+        WHERE brand IS NOT NULL AND brand != ''
+        ORDER BY brand
+    ''').fetchall()
+    conn.close()
+    return jsonify([row['brand'] for row in brands])
+
+@app.route('/api/autocomplete/models')
+def autocomplete_models():
+    """Get list of unique models from database for autocomplete, optionally filtered by brand"""
+    brand = request.args.get('brand', '')
+    conn = get_db()
+    if brand:
+        models = conn.execute('''
+            SELECT DISTINCT model FROM tools
+            WHERE brand = ? AND model IS NOT NULL AND model != ''
+            ORDER BY model
+        ''', (brand,)).fetchall()
+    else:
+        models = conn.execute('''
+            SELECT DISTINCT model FROM tools
+            WHERE model IS NOT NULL AND model != ''
+            ORDER BY model
+        ''').fetchall()
+    conn.close()
+    return jsonify([row['model'] for row in models])
+
 @app.route('/search/bunnings')
 def search_bunnings():
-    """Search Bunnings for accessories - placeholder for future implementation"""
-    tool_name = request.args.get('tool', '')
-    # This would integrate with web scraping in the future
-    return jsonify({'message': 'Bunnings search coming soon', 'tool': tool_name})
+    """Search Bunnings for products"""
+    query = request.args.get('q', '')
+    if not query:
+        return jsonify({'success': False, 'error': 'No search query provided', 'products': []})
+
+    results = scrape_bunnings_search(query)
+    return jsonify(results)
 
 if __name__ == '__main__':
     init_db()
