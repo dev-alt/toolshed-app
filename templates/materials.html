@@ -28,80 +28,73 @@
 </div>
 {% endif %}
 
+<!-- Bulk Actions Bar -->
+<div id="bulkActionsBar" style="display: none; position: sticky; top: 0; z-index: 100; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); padding: 16px 24px; border-radius: 12px; margin-bottom: 24px; color: white; align-items: center; gap: 16px;">
+    <span id="selectedCount" style="font-weight: 600; font-family: var(--font-display);">0 items selected</span>
+    <button onclick="printSelectedLabels()" class="btn" style="background: white; color: var(--accent-cyan); padding: 8px 20px;">
+        🖨️ Print Labels
+    </button>
+    <button onclick="clearSelection()" class="btn" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 20px;">
+        Clear Selection
+    </button>
+</div>
+
 {% if materials %}
-<div class="table-container">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Material</th>
-                <th>Category</th>
-                <th>Dimensions</th>
-                <th>Stock</th>
-                <th>Cost</th>
-                <th>Location</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in materials %}
-            <tr>
-                <td>
-                    <div style="font-weight: 600; font-family: var(--font-display);">{{ item.name }}</div>
-                    {% if item.material_type %}
-                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">{{ item.material_type }}</div>
-                    {% endif %}
-                    {% if item.grade or item.finish or item.color %}
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                        {% if item.grade %}Grade: {{ item.grade }}{% endif %}
-                        {% if item.finish %}{% if item.grade %} • {% endif %}{{ item.finish }}{% endif %}
-                        {% if item.color %}{% if item.grade or item.finish %} • {% endif %}{{ item.color }}{% endif %}
-                    </div>
-                    {% endif %}
-                </td>
-                <td>{{ item.category or '-' }}</td>
-                <td style="font-family: var(--font-mono); font-size: 13px;">
+<div class="tool-grid">
+    {% for item in materials %}
+    <div class="tool-card-wrapper">
+        <div class="tool-card-checkbox">
+            <input type="checkbox" class="item-checkbox" data-type="material" data-id="{{ item.id }}" onchange="updateBulkActions()">
+        </div>
+        <a href="{{ url_for('material_detail', material_id=item.id) }}" class="tool-card enhanced">
+            {% if item.image_path %}
+            <img src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.name }}" class="tool-image">
+            {% else %}
+            <div class="tool-image placeholder">🪵</div>
+            {% endif %}
+            <div class="tool-info">
+                <div class="tool-name">{{ item.name }}</div>
+                <div class="tool-meta">
+                    {% if item.category %}<div style="color: var(--accent-cyan);">{{ item.category }}</div>{% endif %}
+                    {% if item.material_type %}<div>{{ item.material_type }}</div>{% endif %}
                     {% if item.dimensions_length or item.dimensions_width or item.dimensions_thickness %}
+                    <div style="font-family: var(--font-mono); font-size: 12px;">
                         {% if item.dimensions_length %}{{ item.dimensions_length }}{% endif %}
                         {% if item.dimensions_width %}{% if item.dimensions_length %} × {% endif %}{{ item.dimensions_width }}{% endif %}
                         {% if item.dimensions_thickness %}{% if item.dimensions_length or item.dimensions_width %} × {% endif %}{{ item.dimensions_thickness }}{% endif %}
                         {{ item.dimension_unit or 'mm' }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td>
-                    {% if item.min_quantity and item.quantity <= item.min_quantity %}
-                    <span style="color: var(--warning); font-weight: 600; font-family: var(--font-mono);">{{ item.quantity }}</span>
-                    {% else %}
-                    <span style="font-family: var(--font-mono);">{{ item.quantity }}</span>
-                    {% endif %}
-                    {{ item.unit }}
-                    {% if item.min_quantity %}
-                    <div style="font-size: 11px; color: var(--text-muted);">min: {{ item.min_quantity }}</div>
-                    {% endif %}
-                </td>
-                <td style="font-family: var(--font-mono); font-size: 13px;">
-                    {% if item.purchase_price %}
-                        ${{ "%.2f"|format(item.purchase_price) }}
-                    {% elif item.cost_per_unit %}
-                        ${{ "%.2f"|format(item.cost_per_unit) }}/{{ item.unit }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td>{{ item.location or '-' }}</td>
-                <td>
-                    <div style="display: flex; gap: 8px;">
-                        <a href="{{ url_for('edit_material', material_id=item.id) }}" class="btn" style="padding: 8px 16px; font-size: 13px;">Edit</a>
-                        <form method="POST" action="{{ url_for('delete_material', material_id=item.id) }}" style="margin: 0;" onsubmit="return confirm('Delete this material?');">
-                            <button type="submit" class="btn" style="padding: 8px 16px; font-size: 13px; background: linear-gradient(135deg, var(--danger), #dc2626); border-color: var(--danger); color: white;">Delete</button>
-                        </form>
                     </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    {% endif %}
+                    <div style="{% if item.min_quantity and item.quantity <= item.min_quantity %}color: var(--warning); font-weight: 600;{% endif %}">
+                        Stock: {{ item.quantity }} {{ item.unit }}
+                        {% if item.min_quantity and item.quantity <= item.min_quantity %} ⚠️{% endif %}
+                    </div>
+                    {% if item.location %}<div>📍 {{ item.location }}</div>{% endif %}
+                    {% if item.purchase_price or item.cost_per_unit %}
+                    <div style="font-family: var(--font-mono); color: var(--accent-orange); font-weight: 600;">
+                        {% if item.purchase_price %}
+                            ${{ "%.2f"|format(item.purchase_price) }}
+                        {% elif item.cost_per_unit %}
+                            ${{ "%.2f"|format(item.cost_per_unit) }}/{{ item.unit }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        <div class="quick-actions">
+            <a href="{{ url_for('edit_material', material_id=item.id) }}" class="quick-action-btn" title="Edit" onclick="event.stopPropagation();">
+                ✏️
+            </a>
+            <a href="{{ url_for('labels', **{'materials[]': item.id}) }}" class="quick-action-btn" title="Print Label" onclick="event.stopPropagation();" target="_blank">
+                🖨️
+            </a>
+            <form method="POST" action="{{ url_for('delete_material', material_id=item.id) }}" style="display: inline;" onsubmit="event.stopPropagation(); return confirm('Delete {{ item.name }}?');">
+                <button type="submit" class="quick-action-btn delete" title="Delete">🗑️</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% else %}
 <div class="text-center" style="padding: 60px 20px;">
@@ -113,4 +106,37 @@
     <a href="{{ url_for('add_material') }}" class="btn btn-primary">Add First Material</a>
 </div>
 {% endif %}
+
+<script>
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+    const bulkBar = document.getElementById('bulkActionsBar');
+    const countSpan = document.getElementById('selectedCount');
+
+    if (checkboxes.length > 0) {
+        bulkBar.style.display = 'flex';
+        countSpan.textContent = `${checkboxes.length} item${checkboxes.length > 1 ? 's' : ''} selected`;
+    } else {
+        bulkBar.style.display = 'none';
+    }
+}
+
+function printSelectedLabels() {
+    const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+    const params = new URLSearchParams();
+
+    checkboxes.forEach(cb => {
+        const type = cb.dataset.type;
+        const id = cb.dataset.id;
+        params.append(`${type}s[]`, id);
+    });
+
+    window.open(`{{ url_for('labels') }}?${params.toString()}`, '_blank');
+}
+
+function clearSelection() {
+    document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+    updateBulkActions();
+}
+</script>
 {% endblock %}
