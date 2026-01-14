@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping List - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <div>
+        <h1 class="section-header">🛒 Shopping List</h1>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">
+            {% if stores %}
+            Organized by store • Total: ${{ "%.2f"|format(total_cost) }}
+            {% else %}
+            Add items you need to buy
+            {% endif %}
+        </p>
+    </div>
+    <div class="flex gap-20">
+        <form method="POST" action="{{ url_for('add_low_stock_to_list') }}" style="display: inline;">
+            <button type="submit" class="btn btn-blue">📦 Add Low Stock Items</button>
+        </form>
+        <button onclick="document.getElementById('addItemModal').style.display='flex'" class="btn btn-primary">+ Add Custom Item</button>
+    </div>
+</div>
+
+{% if stores %}
+<!-- Shopping List by Store -->
+{% for store, items in stores.items() %}
+<div class="glass" style="padding: 24px; border-radius: 16px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-size: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">
+            🏪 {{ store }}
+            <span style="font-size: 14px; color: var(--text-secondary); font-weight: 400; margin-left: 12px;">
+                ({{ items|length }} items)
+            </span>
+        </h3>
+        <div style="font-size: 18px; font-weight: 600; font-family: var(--font-mono); color: var(--accent-orange);">
+            ${{ "%.2f"|format(items|sum(attribute='estimated_cost', start=0)) }}
+        </div>
+    </div>
+
+    <div style="display: grid; gap: 12px;">
+        {% for item in items %}
+        <div class="shopping-list-item">
+            <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                <input type="checkbox" onchange="markPurchased({{ item.id }}, this)" style="width: 24px; height: 24px; cursor: pointer; accent-color: var(--success);">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-family: var(--font-display); font-size: 15px;">{{ item.item_name }}</div>
+                    {% if item.notes %}
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">{{ item.notes }}</div>
+                    {% endif %}
+                </div>
+                {% if item.quantity %}
+                <div style="font-family: var(--font-mono); color: var(--text-primary); font-weight: 600;">
+                    {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}
+                </div>
+                {% endif %}
+                {% if item.estimated_cost %}
+                <div style="font-family: var(--font-mono); color: var(--accent-orange); font-weight: 600; min-width: 80px; text-align: right;">
+                    ${{ "%.2f"|format(item.estimated_cost) }}
+                </div>
+                {% endif %}
+            </div>
+            <button onclick="deleteItem({{ item.id }})" class="quick-action-btn delete" style="margin-left: 12px;" title="Remove">
+                🗑️
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+<!-- Total Summary -->
+<div class="glass" style="padding: 24px; border-radius: 16px; margin-bottom: 32px; background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(251, 146, 60, 0.1)); border: 2px solid var(--accent-orange);">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <div style="font-size: 16px; color: var(--text-secondary); margin-bottom: 4px;">Estimated Total</div>
+            <div style="font-size: 36px; font-weight: 700; font-family: var(--font-display); background: linear-gradient(135deg, var(--accent-orange), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                ${{ "%.2f"|format(total_cost) }}
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <button onclick="window.print()" class="btn btn-primary">🖨️ Print List</button>
+            <button onclick="exportList()" class="btn btn-blue">📤 Export</button>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="glass" style="padding: 60px 20px; border-radius: 16px; text-align: center;">
+    <div style="font-size: 72px; margin-bottom: 24px; opacity: 0.5;">🛒</div>
+    <h2 style="font-family: var(--font-display); font-size: 28px; margin-bottom: 12px;">Your shopping list is empty</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 28px; font-size: 15px;">
+        Add items manually or import low stock items automatically
+    </p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+        <form method="POST" action="{{ url_for('add_low_stock_to_list') }}" style="display: inline;">
+            <button type="submit" class="btn btn-blue">📦 Add Low Stock Items</button>
+        </form>
+        <button onclick="document.getElementById('addItemModal').style.display='flex'" class="btn btn-primary">+ Add Custom Item</button>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recently Purchased -->
+{% if purchased_items %}
+<div class="glass" style="padding: 24px; border-radius: 16px; margin-bottom: 32px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">
+            ✅ Recently Purchased (Last 30 Days)
+        </h3>
+        <form method="POST" action="{{ url_for('clear_purchased') }}" style="display: inline;" onsubmit="return confirm('Clear all purchased items?');">
+            <button type="submit" class="btn" style="font-size: 13px; padding: 8px 16px;">Clear History</button>
+        </form>
+    </div>
+    <div style="display: grid; gap: 8px; opacity: 0.7;">
+        {% for item in purchased_items %}
+        <div style="padding: 12px; background: rgba(16, 185, 129, 0.05); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span style="font-weight: 600;">{{ item.item_name }}</span>
+                {% if item.quantity %}<span style="color: var(--text-secondary); margin-left: 8px;">{{ item.quantity }} {{ item.unit }}</span>{% endif %}
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">{{ item.purchased_date }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Add Item Modal -->
+<div id="addItemModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass" style="padding: 32px; border-radius: 20px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="font-size: 20px; font-weight: 700; font-family: var(--font-display);">Add Item to Shopping List</h3>
+            <button onclick="document.getElementById('addItemModal').style.display='none'" style="background: none; border: none; font-size: 32px; cursor: pointer; color: var(--text-muted);">×</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('add_to_shopping_list') }}">
+            <div class="form-group">
+                <label class="form-label" for="item_name">Item Name *</label>
+                <input type="text" id="item_name" name="item_name" class="form-input" placeholder="e.g., Wood Screws, Paint, Sandpaper" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="quantity">Quantity</label>
+                    <input type="number" id="quantity" name="quantity" class="form-input" step="0.1" placeholder="e.g., 2">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="unit">Unit</label>
+                    <select id="unit" name="unit" class="form-select">
+                        <option value="pcs">Pieces</option>
+                        <option value="boxes">Boxes</option>
+                        <option value="packs">Packs</option>
+                        <option value="m">Meters</option>
+                        <option value="kg">Kilograms</option>
+                        <option value="L">Liters</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="estimated_cost">Estimated Cost ($)</label>
+                    <input type="number" id="estimated_cost" name="estimated_cost" class="form-input" step="0.01" placeholder="e.g., 29.99">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="store">Store</label>
+                    <select id="store" name="store" class="form-select">
+                        <option value="Bunnings">Bunnings</option>
+                        <option value="Mitre 10">Mitre 10</option>
+                        <option value="Placemakers">Placemakers</option>
+                        <option value="Hammer Hardware">Hammer Hardware</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-textarea" rows="2" placeholder="Size, color, brand preferences..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn btn-primary">Add to List</button>
+                <button type="button" onclick="document.getElementById('addItemModal').style.display='none'" class="btn">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+async function markPurchased(itemId, checkbox) {
+    try {
+        const response = await fetch(`/shopping-list/mark-purchased/${itemId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const item = checkbox.closest('.shopping-list-item');
+            item.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(() => {
+                item.remove();
+                // Reload if no items left in section
+                const remainingItems = document.querySelectorAll('.shopping-list-item').length;
+                if (remainingItems === 0) {
+                    location.reload();
+                }
+            }, 300);
+            showToast('Marked as purchased', 'success');
+        }
+    } catch (error) {
+        console.error('Error marking purchased:', error);
+        checkbox.checked = false;
+        showToast('Failed to mark as purchased', 'error');
+    }
+}
+
+async function deleteItem(itemId) {
+    if (!confirm('Remove this item from the shopping list?')) return;
+
+    try {
+        const response = await fetch(`/shopping-list/delete/${itemId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            location.reload();
+        }
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        showToast('Failed to delete item', 'error');
+    }
+}
+
+function exportList() {
+    const items = [];
+    document.querySelectorAll('.shopping-list-item').forEach(item => {
+        const name = item.querySelector('div[style*="font-weight: 600"]').textContent;
+        items.push(name);
+    });
+
+    const text = items.join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shopping-list-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Shopping list exported', 'success');
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.getElementById('addItemModal').style.display = 'none';
+    }
+});
+</script>
+
+<style>
+.shopping-list-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.shopping-list-item:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateX(4px);
+    border-color: var(--accent-orange);
+}
+
+@media print {
+    .btn, .quick-action-btn, .nav, .footer, form, #addItemModal {
+        display: none !important;
+    }
+
+    .glass {
+        background: white !important;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+
+    .shopping-list-item input[type="checkbox"] {
+        border: 2px solid #333;
+    }
+}
+</style>
+{% endblock %}

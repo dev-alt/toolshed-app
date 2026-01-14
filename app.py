@@ -132,6 +132,24 @@ def init_db():
         )
     ''')
 
+    # Shopping list table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS shopping_list (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_name TEXT NOT NULL,
+            item_type TEXT,
+            item_id INTEGER,
+            quantity REAL,
+            unit TEXT,
+            estimated_cost REAL,
+            store TEXT,
+            notes TEXT,
+            purchased INTEGER DEFAULT 0,
+            purchased_date TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -1226,6 +1244,177 @@ def favorites_page():
 
     conn.close()
     return render_template('favorites.html', items=items)
+
+# Shopping List Routes
+
+@app.route('/shopping-list')
+def shopping_list():
+    """View shopping list"""
+    conn = get_db()
+
+    # Get all shopping list items
+    items = conn.execute('''
+        SELECT * FROM shopping_list
+        WHERE purchased = 0
+        ORDER BY store, created_at
+    ''').fetchall()
+
+    # Get purchased items (last 30 days)
+    purchased_items = conn.execute('''
+        SELECT * FROM shopping_list
+        WHERE purchased = 1
+        AND purchased_date >= date('now', '-30 days')
+        ORDER BY purchased_date DESC
+    ''').fetchall()
+
+    # Group by store
+    stores = {}
+    total_cost = 0
+
+    for item in items:
+        store = item['store'] or 'Other'
+        if store not in stores:
+            stores[store] = []
+        stores[store].append(item)
+        if item['estimated_cost']:
+            total_cost += item['estimated_cost']
+
+    conn.close()
+    return render_template('shopping_list.html', stores=stores, total_cost=total_cost, purchased_items=purchased_items)
+
+@app.route('/shopping-list/add-low-stock', methods=['POST'])
+def add_low_stock_to_list():
+    """Auto-add all low stock items to shopping list"""
+    conn = get_db()
+
+    # Get low stock consumables
+    low_consumables = conn.execute('''
+        SELECT * FROM consumables
+        WHERE min_quantity IS NOT NULL AND quantity <= min_quantity
+    ''').fetchall()
+
+    # Get low stock fasteners
+    low_fasteners = conn.execute('''
+        SELECT * FROM fasteners
+        WHERE min_quantity IS NOT NULL AND quantity <= min_quantity
+    ''').fetchall()
+
+    # Get low stock materials
+    low_materials = conn.execute('''
+        SELECT * FROM materials
+        WHERE min_quantity IS NOT NULL AND quantity <= min_quantity
+    ''').fetchall()
+
+    added_count = 0
+
+    # Add consumables
+    for item in low_consumables:
+        # Check if already in list
+        existing = conn.execute(
+            'SELECT id FROM shopping_list WHERE item_type = ? AND item_id = ? AND purchased = 0',
+            ('consumable', item['id'])
+        ).fetchone()
+
+        if not existing:
+            needed = (item['min_quantity'] - item['quantity']) if item['min_quantity'] > item['quantity'] else item['min_quantity']
+            conn.execute('''
+                INSERT INTO shopping_list (item_name, item_type, item_id, quantity, unit, store, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (item['name'], 'consumable', item['id'], needed, item['unit'], 'Bunnings', f"Low stock: {item['quantity']}/{item['min_quantity']}"))
+            added_count += 1
+
+    # Add fasteners
+    for item in low_fasteners:
+        existing = conn.execute(
+            'SELECT id FROM shopping_list WHERE item_type = ? AND item_id = ? AND purchased = 0',
+            ('fastener', item['id'])
+        ).fetchone()
+
+        if not existing:
+            needed = (item['min_quantity'] - item['quantity']) if item['min_quantity'] > item['quantity'] else item['min_quantity']
+            name = f"{item['fastener_type']} {item['diameter']}mm x {item['length']}mm" if item['length'] else f"{item['fastener_type']} {item['diameter']}mm"
+            conn.execute('''
+                INSERT INTO shopping_list (item_name, item_type, item_id, quantity, unit, store, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (name, 'fastener', item['id'], needed, 'pcs', 'Bunnings', f"Low stock: {item['quantity']}/{item['min_quantity']}"))
+            added_count += 1
+
+    # Add materials
+    for item in low_materials:
+        existing = conn.execute(
+            'SELECT id FROM shopping_list WHERE item_type = ? AND item_id = ? AND purchased = 0',
+            ('material', item['id'])
+        ).fetchone()
+
+        if not existing:
+            needed = (item['min_quantity'] - item['quantity']) if item['min_quantity'] > item['quantity'] else item['min_quantity']
+            conn.execute('''
+                INSERT INTO shopping_list (item_name, item_type, item_id, quantity, unit, store, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (item['name'], 'material', item['id'], needed, item['unit'], item['supplier'] or 'Bunnings', f"Low stock: {item['quantity']}/{item['min_quantity']}"))
+            added_count += 1
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('shopping_list', toast=f'Added {added_count} low stock items to shopping list', toast_type='success'))
+
+@app.route('/shopping-list/add', methods=['POST'])
+def add_to_shopping_list():
+    """Add custom item to shopping list"""
+    item_name = request.form.get('item_name')
+    quantity = request.form.get('quantity')
+    unit = request.form.get('unit', 'pcs')
+    estimated_cost = request.form.get('estimated_cost')
+    store = request.form.get('store', 'Bunnings')
+    notes = request.form.get('notes', '')
+
+    if not item_name:
+        return redirect(url_for('shopping_list', toast='Item name is required', toast_type='error'))
+
+    conn = get_db()
+    conn.execute('''
+        INSERT INTO shopping_list (item_name, quantity, unit, estimated_cost, store, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (item_name, quantity, unit, estimated_cost, store, notes))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('shopping_list', toast='Item added to shopping list', toast_type='success'))
+
+@app.route('/shopping-list/mark-purchased/<int:item_id>', methods=['POST'])
+def mark_purchased(item_id):
+    """Mark item as purchased"""
+    conn = get_db()
+    conn.execute('''
+        UPDATE shopping_list
+        SET purchased = 1, purchased_date = ?
+        WHERE id = ?
+    ''', (datetime.now().strftime('%Y-%m-%d'), item_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+@app.route('/shopping-list/delete/<int:item_id>', methods=['POST'])
+def delete_shopping_item(item_id):
+    """Delete item from shopping list"""
+    conn = get_db()
+    conn.execute('DELETE FROM shopping_list WHERE id = ?', (item_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+@app.route('/shopping-list/clear-purchased', methods=['POST'])
+def clear_purchased():
+    """Clear all purchased items"""
+    conn = get_db()
+    conn.execute('DELETE FROM shopping_list WHERE purchased = 1')
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('shopping_list', toast='Cleared purchased items', toast_type='info'))
 
 if __name__ == '__main__':
     init_db()
