@@ -4,62 +4,118 @@
 
 {% block content %}
 <div class="flex justify-between align-center mb-30">
-    <h1 class="section-header">Dashboard</h1>
-    <div class="flex gap-20">
-        <a href="{{ url_for('add_tool') }}" class="btn btn-primary">+ Add Tool</a>
-        <a href="{{ url_for('add_consumable') }}" class="btn btn-blue">+ Add Consumable</a>
-        <a href="{{ url_for('fastener_wizard') }}" class="btn btn-purple">✨ Add Fastener</a>
+    <div>
+        <h1 class="section-header">Dashboard</h1>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">Welcome back! Here's your workshop overview</p>
+    </div>
+    <a href="{{ url_for('scanner') }}" class="btn" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); color: white; padding: 12px 24px; font-size: 15px;">
+        📱 Scan Item
+    </a>
+</div>
+
+<!-- Quick Actions -->
+<div class="glass" style="padding: 24px; border-radius: 16px; margin-bottom: 32px;">
+    <h3 style="font-size: 16px; margin-bottom: 16px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">⚡ Quick Actions</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+        <a href="{{ url_for('add_tool') }}" class="btn btn-primary" style="justify-content: center; padding: 12px;">🔧 Add Tool</a>
+        <a href="{{ url_for('add_consumable') }}" class="btn btn-blue" style="justify-content: center; padding: 12px;">⚙️ Add Consumable</a>
+        <a href="{{ url_for('fastener_wizard') }}" class="btn btn-purple" style="justify-content: center; padding: 12px;">🔩 Add Fastener</a>
+        <a href="{{ url_for('add_material') }}" class="btn" style="justify-content: center; padding: 12px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));">🪵 Add Material</a>
     </div>
 </div>
 
 <!-- Stats Cards -->
 <div class="dashboard-stats">
-    <div class="stat-card">
-        <div class="stat-label">Total Tools</div>
-        <div class="stat-value">{{ tool_count }}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Consumables</div>
-        <div class="stat-value">{{ consumable_count }}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Fasteners</div>
-        <div class="stat-value">{{ fastener_count }}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Materials</div>
-        <div class="stat-value">{{ material_count }}</div>
-    </div>
+    <a href="{{ url_for('tools') }}" class="stat-card" style="text-decoration: none; cursor: pointer; transition: all 0.3s;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+            <div style="font-size: 42px;">🔧</div>
+            <div>
+                <div class="stat-label">Total Tools</div>
+                <div class="stat-value">{{ tool_count }}</div>
+            </div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary);">View all tools →</div>
+    </a>
+    <a href="{{ url_for('consumables') }}" class="stat-card" style="text-decoration: none; cursor: pointer; transition: all 0.3s;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+            <div style="font-size: 42px;">⚙️</div>
+            <div>
+                <div class="stat-label">Consumables</div>
+                <div class="stat-value">{{ consumable_count }}</div>
+            </div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary);">View consumables →</div>
+    </a>
+    <a href="{{ url_for('fasteners') }}" class="stat-card" style="text-decoration: none; cursor: pointer; transition: all 0.3s;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+            <div style="font-size: 42px;">🔩</div>
+            <div>
+                <div class="stat-label">Fasteners</div>
+                <div class="stat-value">{{ fastener_count }}</div>
+            </div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary);">View fasteners →</div>
+    </a>
+    <a href="{{ url_for('materials') }}" class="stat-card" style="text-decoration: none; cursor: pointer; transition: all 0.3s;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+            <div style="font-size: 42px;">🪵</div>
+            <div>
+                <div class="stat-label">Materials</div>
+                <div class="stat-value">{{ material_count }}</div>
+            </div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary);">View materials →</div>
+    </a>
 </div>
 
 {% if low_stock_consumables or low_stock_fasteners %}
-<div class="mb-30">
-    <h2 class="section-header">Low Stock Alerts</h2>
+<div class="glass" style="padding: 24px; border-radius: 16px; margin-bottom: 32px; border-left: 4px solid var(--warning);">
+    <h2 style="font-size: 20px; margin-bottom: 20px; font-weight: 700; color: var(--warning); font-family: var(--font-display); display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 24px;">⚠️</span>
+        Low Stock Alerts
+        <span style="background: var(--warning); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">
+            {{ (low_stock_consumables|length) + (low_stock_fasteners|length) }}
+        </span>
+    </h2>
 
     {% if low_stock_consumables %}
-    <h3 style="font-size: 18px; margin: 20px 0 10px 0; color: var(--primary);">Consumables</h3>
-    {% for item in low_stock_consumables %}
-    <div class="low-stock-item">
-        <div>
-            <div class="low-stock-name">{{ item.name }}</div>
-            <div class="tool-meta">{{ item.category }}</div>
+    <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-primary); font-weight: 600;">⚙️ Consumables</h3>
+        <div style="display: grid; gap: 10px;">
+            {% for item in low_stock_consumables %}
+            <a href="{{ url_for('consumable_detail', consumable_id=item.id) }}" class="low-stock-item" style="text-decoration: none; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(245, 158, 11, 0.05); border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                <div>
+                    <div class="low-stock-name">{{ item.name }}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">{{ item.category }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="low-stock-qty">{{ item.quantity }} {{ item.unit }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">min: {{ item.min_quantity }}</div>
+                </div>
+            </a>
+            {% endfor %}
         </div>
-        <div class="low-stock-qty">{{ item.quantity }} {{ item.unit }}</div>
     </div>
-    {% endfor %}
     {% endif %}
 
     {% if low_stock_fasteners %}
-    <h3 style="font-size: 18px; margin: 20px 0 10px 0; color: var(--primary);">Fasteners</h3>
-    {% for item in low_stock_fasteners %}
-    <div class="low-stock-item">
-        <div>
-            <div class="low-stock-name">{{ item.category }} - {{ item.size }}{% if item.length %} x {{ item.length }}{% endif %}</div>
-            <div class="tool-meta">{% if item.material %}{{ item.material }}{% endif %}{% if item.head_type %} • {{ item.head_type }}{% endif %}</div>
+    <div>
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-primary); font-weight: 600;">🔩 Fasteners</h3>
+        <div style="display: grid; gap: 10px;">
+            {% for item in low_stock_fasteners %}
+            <a href="{{ url_for('fastener_detail', fastener_id=item.id) }}" class="low-stock-item" style="text-decoration: none; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(245, 158, 11, 0.05); border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                <div>
+                    <div class="low-stock-name">{{ item.fastener_type }} - {{ item.diameter }}mm{% if item.length %} × {{ item.length }}mm{% endif %}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">{% if item.material %}{{ item.material }}{% endif %}{% if item.head_type %} • {{ item.head_type }}{% endif %}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="low-stock-qty">{{ item.quantity }} pcs</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">min: {{ item.min_quantity }}</div>
+                </div>
+            </a>
+            {% endfor %}
         </div>
-        <div class="low-stock-qty">{{ item.quantity }} pcs</div>
     </div>
-    {% endfor %}
     {% endif %}
 </div>
 {% endif %}
