@@ -1174,3 +1174,51 @@ textarea {
         gap: 16px;
     }
 }
+
+/* Favorite Button */
+.favorite-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glass);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 20px;
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+    position: relative;
+}
+
+.favorite-btn:not(.favorited) {
+    filter: grayscale(1);
+    opacity: 0.6;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.15) rotate(12deg);
+    background: white;
+    box-shadow: var(--shadow-lg);
+    opacity: 1;
+    filter: grayscale(0);
+}
+
+.favorite-btn.favorited {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border-color: #f59e0b;
+    animation: starPulse 2s ease-in-out infinite;
+}
+
+@keyframes starPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}

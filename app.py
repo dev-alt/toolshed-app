@@ -121,6 +121,17 @@ def init_db():
         )
     ''')
 
+    # Favorites table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS favorites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_type TEXT NOT NULL,
+            item_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(item_type, item_id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -274,6 +285,9 @@ def index():
         LIMIT 6
     ''').fetchall()
 
+    # Get favorite count
+    favorite_count = conn.execute('SELECT COUNT(*) as count FROM favorites').fetchone()['count']
+
     conn.close()
 
     return render_template('index.html',
@@ -281,6 +295,7 @@ def index():
                          consumable_count=consumable_count,
                          fastener_count=fastener_count,
                          material_count=material_count,
+                         favorite_count=favorite_count,
                          low_stock_consumables=low_stock_consumables,
                          low_stock_fasteners=low_stock_fasteners,
                          recent_tools=recent_tools)
@@ -1078,6 +1093,139 @@ def fastener_detail(fastener_id):
 
     qr_code = generate_qr_code('fastener', fastener_id)
     return render_template('fastener_detail.html', fastener=fastener, qr_code=qr_code)
+
+# Favorites Routes
+
+@app.route('/api/favorite/toggle', methods=['POST'])
+def toggle_favorite():
+    """Toggle favorite status for an item"""
+    data = request.get_json()
+    item_type = data.get('item_type')
+    item_id = data.get('item_id')
+
+    if not item_type or not item_id:
+        return jsonify({'success': False, 'error': 'Missing parameters'}), 400
+
+    conn = get_db()
+
+    # Check if already favorited
+    existing = conn.execute(
+        'SELECT id FROM favorites WHERE item_type = ? AND item_id = ?',
+        (item_type, item_id)
+    ).fetchone()
+
+    if existing:
+        # Remove favorite
+        conn.execute('DELETE FROM favorites WHERE item_type = ? AND item_id = ?', (item_type, item_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'favorited': False})
+    else:
+        # Add favorite
+        conn.execute(
+            'INSERT INTO favorites (item_type, item_id) VALUES (?, ?)',
+            (item_type, item_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'favorited': True})
+
+@app.route('/api/favorites/check', methods=['POST'])
+def check_favorites():
+    """Check favorite status for multiple items"""
+    data = request.get_json()
+    items = data.get('items', [])
+
+    if not items:
+        return jsonify({'favorites': []})
+
+    conn = get_db()
+    favorites = []
+
+    for item in items:
+        existing = conn.execute(
+            'SELECT id FROM favorites WHERE item_type = ? AND item_id = ?',
+            (item['type'], item['id'])
+        ).fetchone()
+
+        if existing:
+            favorites.append({'type': item['type'], 'id': item['id']})
+
+    conn.close()
+    return jsonify({'favorites': favorites})
+
+@app.route('/favorites')
+def favorites_page():
+    """View all favorited items"""
+    conn = get_db()
+
+    # Get all favorites with item details
+    favorites = conn.execute('''
+        SELECT item_type, item_id, created_at
+        FROM favorites
+        ORDER BY created_at DESC
+    ''').fetchall()
+
+    items = []
+
+    for fav in favorites:
+        item_type = fav['item_type']
+        item_id = fav['item_id']
+
+        if item_type == 'tool':
+            tool = conn.execute('SELECT * FROM tools WHERE id = ?', (item_id,)).fetchone()
+            if tool:
+                items.append({
+                    'type': 'tool',
+                    'id': tool['id'],
+                    'name': tool['name'],
+                    'brand': tool['brand'],
+                    'model': tool['model'],
+                    'category': tool['category'],
+                    'location': tool['location'],
+                    'image_path': tool['image_path']
+                })
+        elif item_type == 'consumable':
+            consumable = conn.execute('SELECT * FROM consumables WHERE id = ?', (item_id,)).fetchone()
+            if consumable:
+                items.append({
+                    'type': 'consumable',
+                    'id': consumable['id'],
+                    'name': consumable['name'],
+                    'category': consumable['category'],
+                    'quantity': consumable['quantity'],
+                    'unit': consumable['unit'],
+                    'location': consumable['location'],
+                    'image_path': consumable['image_path']
+                })
+        elif item_type == 'material':
+            material = conn.execute('SELECT * FROM materials WHERE id = ?', (item_id,)).fetchone()
+            if material:
+                items.append({
+                    'type': 'material',
+                    'id': material['id'],
+                    'name': material['name'],
+                    'category': material['category'],
+                    'quantity': material['quantity'],
+                    'unit': material['unit'],
+                    'location': material['location'],
+                    'image_path': material['image_path']
+                })
+        elif item_type == 'fastener':
+            fastener = conn.execute('SELECT * FROM fasteners WHERE id = ?', (item_id,)).fetchone()
+            if fastener:
+                items.append({
+                    'type': 'fastener',
+                    'id': fastener['id'],
+                    'name': f"{fastener['fastener_type']} - {fastener['diameter']}mm",
+                    'category': fastener['fastener_type'],
+                    'quantity': fastener['quantity'],
+                    'location': fastener['location'],
+                    'image_path': fastener['image_path']
+                })
+
+    conn.close()
+    return render_template('favorites.html', items=items)
 
 if __name__ == '__main__':
     init_db()

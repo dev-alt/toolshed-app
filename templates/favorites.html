@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Favorites - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <div>
+        <h1 class="section-header">⭐ Favorites</h1>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">Your starred items for quick access</p>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn">Back to Dashboard</a>
+</div>
+
+{% if items %}
+<div class="tool-grid">
+    {% for item in items %}
+    <div class="tool-card-wrapper">
+        <div style="position: absolute; top: 12px; left: 12px; z-index: 10;">
+            <button class="favorite-btn favorited" data-type="{{ item.type }}" data-id="{{ item.id }}" onclick="toggleFavorite(this, event)" title="Remove from favorites">
+                ⭐
+            </button>
+        </div>
+        <a href="{{ url_for(item.type + '_detail', **{item.type + '_id': item.id}) }}" class="tool-card enhanced">
+            {% if item.image_path %}
+            <img src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.name }}" class="tool-image">
+            {% else %}
+            <div class="tool-image placeholder">
+                {% if item.type == 'tool' %}🔧
+                {% elif item.type == 'consumable' %}⚙️
+                {% elif item.type == 'material' %}🪵
+                {% elif item.type == 'fastener' %}🔩
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="tool-info">
+                <div class="tool-name">{{ item.name }}</div>
+                <div class="tool-meta">
+                    <div style="text-transform: capitalize; color: var(--accent-primary); font-weight: 600;">{{ item.type }}</div>
+                    {% if item.brand %}<div>{{ item.brand }}{% if item.model %} {{ item.model }}{% endif %}</div>{% endif %}
+                    {% if item.category %}<div>{{ item.category }}</div>{% endif %}
+                    {% if item.quantity is defined %}<div>Stock: {{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}</div>{% endif %}
+                    {% if item.location %}<div>📍 {{ item.location }}</div>{% endif %}
+                </div>
+            </div>
+        </a>
+        <div class="quick-actions">
+            <a href="{{ url_for('labels', **{item.type + 's[]': item.id}) }}" class="quick-action-btn" title="Print Label" onclick="event.stopPropagation();" target="_blank">
+                🖨️
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center" style="padding: 80px 20px;">
+    <div style="font-size: 72px; margin-bottom: 24px; opacity: 0.5;">⭐</div>
+    <h2 style="font-family: var(--font-display); font-size: 28px; margin-bottom: 12px;">No favorites yet</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 28px; font-size: 15px;">
+        Star items from any list page to add them here for quick access
+    </p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Go to Dashboard</a>
+</div>
+{% endif %}
+
+<script>
+async function toggleFavorite(button, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const itemType = button.dataset.type;
+    const itemId = button.dataset.id;
+
+    try {
+        const response = await fetch('/api/favorite/toggle', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({item_type: itemType, item_id: parseInt(itemId)})
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.favorited) {
+                button.classList.add('favorited');
+                button.textContent = '⭐';
+                showToast('Added to favorites', 'success');
+            } else {
+                // Remove the card from the page
+                const card = button.closest('.tool-card-wrapper');
+                card.style.animation = 'slideOutRight 0.3s ease forwards';
+                setTimeout(() => {
+                    card.remove();
+                    // Check if no items left
+                    const remaining = document.querySelectorAll('.tool-card-wrapper').length;
+                    if (remaining === 0) {
+                        location.reload();
+                    }
+                }, 300);
+                showToast('Removed from favorites', 'info');
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        showToast('Failed to update favorite', 'error');
+    }
+}
+</script>
+{% endblock %}

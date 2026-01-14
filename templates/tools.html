@@ -51,6 +51,11 @@
         <div class="tool-card-checkbox">
             <input type="checkbox" class="item-checkbox" data-type="tool" data-id="{{ tool.id }}" onchange="updateBulkActions()">
         </div>
+        <div style="position: absolute; top: 12px; right: 60px; z-index: 10;">
+            <button class="favorite-btn" data-type="tool" data-id="{{ tool.id }}" onclick="toggleFavorite(this, event)" title="Add to favorites">
+                ⭐
+            </button>
+        </div>
         <a href="{{ url_for('tool_detail', tool_id=tool.id) }}" class="tool-card enhanced">
             {% if tool.image_path %}
             <img src="{{ url_for('static', filename=tool.image_path) }}" alt="{{ tool.name }}" class="tool-image">
@@ -126,5 +131,77 @@ function clearSelection() {
     document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
     updateBulkActions();
 }
+
+// Favorite functionality
+async function toggleFavorite(button, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const itemType = button.dataset.type;
+    const itemId = button.dataset.id;
+
+    try {
+        const response = await fetch('/api/favorite/toggle', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({item_type: itemType, item_id: parseInt(itemId)})
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.favorited) {
+                button.classList.add('favorited');
+                button.title = 'Remove from favorites';
+                showToast('Added to favorites', 'success');
+            } else {
+                button.classList.remove('favorited');
+                button.title = 'Add to favorites';
+                showToast('Removed from favorites', 'info');
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        showToast('Failed to update favorite', 'error');
+    }
+}
+
+// Load favorite status for all items on page
+async function loadFavorites() {
+    const favoriteButtons = document.querySelectorAll('.favorite-btn');
+    const items = Array.from(favoriteButtons).map(btn => ({
+        type: btn.dataset.type,
+        id: parseInt(btn.dataset.id)
+    }));
+
+    if (items.length === 0) return;
+
+    try {
+        const response = await fetch('/api/favorites/check', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({items})
+        });
+
+        const data = await response.json();
+        const favorites = data.favorites || [];
+
+        favoriteButtons.forEach(btn => {
+            const isFavorited = favorites.some(f =>
+                f.type === btn.dataset.type && f.id === parseInt(btn.dataset.id)
+            );
+
+            if (isFavorited) {
+                btn.classList.add('favorited');
+                btn.title = 'Remove from favorites';
+            }
+        });
+    } catch (error) {
+        console.error('Error loading favorites:', error);
+    }
+}
+
+// Load favorites on page load
+document.addEventListener('DOMContentLoaded', loadFavorites);
 </script>
 {% endblock %}
