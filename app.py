@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
 import sqlite3
 import os
 from datetime import datetime
@@ -8,6 +8,9 @@ from bs4 import BeautifulSoup
 import re
 import json
 from urllib.parse import urlencode
+import qrcode
+from io import BytesIO
+import base64
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -16,6 +19,10 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# QR code configuration
+app.config['QR_FOLDER'] = 'static/qr_codes'
+os.makedirs(app.config['QR_FOLDER'], exist_ok=True)
 
 def get_db():
     """Get database connection"""
@@ -121,6 +128,36 @@ def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def generate_qr_code(item_type, item_id):
+    """
+    Generate QR code for an item.
+    Returns base64 encoded image data.
+    """
+    # Create URL that will be encoded in QR code
+    qr_data = f"{request.host_url}scan/{item_type}/{item_id}"
+
+    # Create QR code instance
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+
+    # Create image
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    # Save to BytesIO buffer
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+
+    # Convert to base64 for embedding in HTML
+    img_base64 = base64.b64encode(buffer.getvalue()).decode()
+    return f"data:image/png;base64,{img_base64}"
 
 def scrape_bunnings_search(query):
     """
@@ -282,21 +319,24 @@ def tool_detail(tool_id):
     """View single tool details"""
     conn = get_db()
     tool = conn.execute('SELECT * FROM tools WHERE id = ?', (tool_id,)).fetchone()
-    
+
     # Get compatible consumables
     compatible = []
     if tool:
         compatible = conn.execute('''
-            SELECT * FROM consumables 
+            SELECT * FROM consumables
             WHERE compatible_with LIKE ?
         ''', (f'%{tool["name"]}%',)).fetchall()
-    
+
     conn.close()
-    
+
     if not tool:
         return "Tool not found", 404
-    
-    return render_template('tool_detail.html', tool=tool, compatible=compatible)
+
+    # Generate QR code
+    qr_code = generate_qr_code('tool', tool_id)
+
+    return render_template('tool_detail.html', tool=tool, compatible=compatible, qr_code=qr_code)
 
 @app.route('/tool/add', methods=['GET', 'POST'])
 def add_tool():
@@ -908,6 +948,136 @@ def search_bunnings():
 
     results = scrape_bunnings_search(query)
     return jsonify(results)
+
+# QR Code Routes
+
+@app.route('/scan/<item_type>/<int:item_id>')
+def scan_redirect(item_type, item_id):
+    """Redirect scanned QR code to appropriate item page"""
+    if item_type == 'tool':
+        return redirect(url_for('tool_detail', tool_id=item_id))
+    elif item_type == 'consumable':
+        return redirect(url_for('consumable_detail', consumable_id=item_id))
+    elif item_type == 'material':
+        return redirect(url_for('material_detail', material_id=item_id))
+    elif item_type == 'fastener':
+        return redirect(url_for('fastener_detail', fastener_id=item_id))
+    else:
+        return redirect(url_for('index'))
+
+@app.route('/scanner')
+def scanner():
+    """QR code scanner page"""
+    return render_template('scanner.html')
+
+@app.route('/labels')
+def labels():
+    """Printable labels page"""
+    conn = get_db()
+
+    # Get selected items from query params
+    tool_ids = request.args.getlist('tools[]')
+    consumable_ids = request.args.getlist('consumables[]')
+    material_ids = request.args.getlist('materials[]')
+    fastener_ids = request.args.getlist('fasteners[]')
+
+    items = []
+
+    # Fetch tools
+    for tool_id in tool_ids:
+        tool = conn.execute('SELECT * FROM tools WHERE id = ?', (tool_id,)).fetchone()
+        if tool:
+            items.append({
+                'type': 'tool',
+                'id': tool['id'],
+                'name': tool['name'],
+                'brand': tool['brand'],
+                'category': tool['category'],
+                'location': tool['location'],
+                'qr_code': generate_qr_code('tool', tool['id'])
+            })
+
+    # Fetch consumables
+    for consumable_id in consumable_ids:
+        consumable = conn.execute('SELECT * FROM consumables WHERE id = ?', (consumable_id,)).fetchone()
+        if consumable:
+            items.append({
+                'type': 'consumable',
+                'id': consumable['id'],
+                'name': consumable['name'],
+                'category': consumable['category'],
+                'location': consumable['location'],
+                'qr_code': generate_qr_code('consumable', consumable['id'])
+            })
+
+    # Fetch materials
+    for material_id in material_ids:
+        material = conn.execute('SELECT * FROM materials WHERE id = ?', (material_id,)).fetchone()
+        if material:
+            items.append({
+                'type': 'material',
+                'id': material['id'],
+                'name': material['name'],
+                'category': material['category'],
+                'location': material['location'],
+                'qr_code': generate_qr_code('material', material['id'])
+            })
+
+    # Fetch fasteners
+    for fastener_id in fastener_ids:
+        fastener = conn.execute('SELECT * FROM fasteners WHERE id = ?', (fastener_id,)).fetchone()
+        if fastener:
+            items.append({
+                'type': 'fastener',
+                'id': fastener['id'],
+                'name': f"{fastener['fastener_type']} - {fastener['head_type']}",
+                'category': fastener['fastener_type'],
+                'location': fastener['location'],
+                'qr_code': generate_qr_code('fastener', fastener['id'])
+            })
+
+    conn.close()
+
+    return render_template('labels.html', items=items)
+
+@app.route('/consumable/<int:consumable_id>')
+def consumable_detail(consumable_id):
+    """Consumable detail page"""
+    conn = get_db()
+    consumable = conn.execute('SELECT * FROM consumables WHERE id = ?', (consumable_id,)).fetchone()
+    conn.close()
+
+    if not consumable:
+        return redirect(url_for('consumables'))
+
+    qr_code = generate_qr_code('consumable', consumable_id)
+    return render_template('consumable_detail.html', consumable=consumable, qr_code=qr_code)
+
+@app.route('/material/<int:material_id>')
+def material_detail(material_id):
+    """Material detail page"""
+    conn = get_db()
+    material = conn.execute('SELECT * FROM materials WHERE id = ?', (material_id,)).fetchone()
+    conn.close()
+
+    if not material:
+        return redirect(url_for('materials'))
+
+    qr_code = generate_qr_code('material', material_id)
+    return render_template('material_detail.html', material=material, qr_code=qr_code)
+
+@app.route('/fastener/<int:fastener_id>')
+def fastener_detail(fastener_id):
+    """Fastener detail page"""
+    conn = get_db()
+    fastener = conn.execute('SELECT * FROM fasteners WHERE id = ?', (fastener_id,)).fetchone()
+    conn.close()
+
+    if not fastener:
+        return redirect(url_for('fasteners'))
+
+    qr_code = generate_qr_code('fastener', fastener_id)
+    return render_template('fastener_detail.html', fastener=fastener, qr_code=qr_code)
 
 if __name__ == '__main__':
     init_db()

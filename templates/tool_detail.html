@@ -16,18 +16,32 @@
 </div>
 
 <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-bottom: 50px;">
-    <!-- Tool Image -->
+    <!-- Tool Image & QR Code -->
     <div>
         {% if tool.image_path %}
-        <img src="{{ url_for('static', filename=tool.image_path) }}" 
-             alt="{{ tool.name }}" 
-             style="width: 100%; border: 2px solid var(--border); background: var(--bg-secondary);">
+        <img src="{{ url_for('static', filename=tool.image_path) }}"
+             alt="{{ tool.name }}"
+             style="width: 100%; border-radius: 12px; border: 1px solid var(--border-glass); background: var(--bg-glass); margin-bottom: 20px;">
         {% else %}
-        <div style="width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
-                    background: var(--bg-secondary); border: 2px solid var(--border); font-size: 80px;">
+        <div style="width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+                    background: var(--bg-glass); border-radius: 12px; border: 1px solid var(--border-glass); font-size: 80px; margin-bottom: 20px;">
             🔧
         </div>
         {% endif %}
+
+        <!-- QR Code Section -->
+        <div class="glass" style="padding: 24px; border-radius: 12px; text-align: center;">
+            <h3 style="font-size: 16px; margin-bottom: 16px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">
+                QR Code
+            </h3>
+            <img src="{{ qr_code }}" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto; display: block; border-radius: 8px; background: white; padding: 12px;">
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">
+                Scan to view this tool
+            </p>
+            <a href="{{ url_for('labels', **{'tools[]': tool.id}) }}" class="btn btn-primary" style="margin-top: 16px; font-size: 13px; padding: 10px 20px;">
+                🖨️ Print Label
+            </a>
+        </div>
     </div>
 
     <!-- Tool Information -->

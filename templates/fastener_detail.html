@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}{{ fastener.fastener_type }} - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">{{ fastener.fastener_type }} - {{ fastener.head_type }}</h1>
+    <div class="flex gap-20">
+        <a href="{{ url_for('fasteners') }}" class="btn">Back to Fasteners</a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-bottom: 50px;">
+    <!-- Image & QR Code -->
+    <div>
+        {% if fastener.image_path %}
+        <img src="{{ url_for('static', filename=fastener.image_path) }}"
+             alt="{{ fastener.fastener_type }}"
+             style="width: 100%; border-radius: 12px; border: 1px solid var(--border-glass); background: var(--bg-glass); margin-bottom: 20px;">
+        {% else %}
+        <div style="width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+                    background: var(--bg-glass); border-radius: 12px; border: 1px solid var(--border-glass); font-size: 80px; margin-bottom: 20px;">
+            🔩
+        </div>
+        {% endif %}
+
+        <!-- QR Code Section -->
+        <div class="glass" style="padding: 24px; border-radius: 12px; text-align: center;">
+            <h3 style="font-size: 16px; margin-bottom: 16px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">
+                QR Code
+            </h3>
+            <img src="{{ qr_code }}" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto; display: block; border-radius: 8px; background: white; padding: 12px;">
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">
+                Scan to view this fastener
+            </p>
+            <a href="{{ url_for('labels', **{'fasteners[]': fastener.id}) }}" class="btn btn-primary" style="margin-top: 16px; font-size: 13px; padding: 10px 20px;">
+                🖨️ Print Label
+            </a>
+        </div>
+    </div>
+
+    <!-- Fastener Information -->
+    <div>
+        <div class="glass" style="padding: 32px; border-radius: 16px; margin-bottom: 20px;">
+            <h2 style="font-family: var(--font-display); font-size: 24px; margin-bottom: 20px;
+                       background: linear-gradient(135deg, var(--accent-purple), #ec4899);
+                       -webkit-background-clip: text;
+                       -webkit-text-fill-color: transparent;">Details</h2>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <div class="form-label">Fastener Type</div>
+                    <div style="font-size: 16px; font-weight: 600;">{{ fastener.fastener_type }}</div>
+                </div>
+
+                <div>
+                    <div class="form-label">Head Type</div>
+                    <div style="font-size: 16px;">{{ fastener.head_type }}</div>
+                </div>
+
+                {% if fastener.drive_type %}
+                <div>
+                    <div class="form-label">Drive Type</div>
+                    <div style="font-size: 16px;">{{ fastener.drive_type }}</div>
+                </div>
+                {% endif %}
+
+                {% if fastener.material %}
+                <div>
+                    <div class="form-label">Material</div>
+                    <div style="font-size: 16px;">{{ fastener.material }}</div>
+                </div>
+                {% endif %}
+
+                {% if fastener.finish %}
+                <div>
+                    <div class="form-label">Finish</div>
+                    <div style="font-size: 16px;">{{ fastener.finish }}</div>
+                </div>
+                {% endif %}
+
+                {% if fastener.thread_type %}
+                <div>
+                    <div class="form-label">Thread Type</div>
+                    <div style="font-size: 16px;">{{ fastener.thread_type }}</div>
+                </div>
+                {% endif %}
+
+                {% if fastener.diameter %}
+                <div>
+                    <div class="form-label">Diameter</div>
+                    <div style="font-size: 16px; font-family: var(--font-mono);">{{ fastener.diameter }} mm</div>
+                </div>
+                {% endif %}
+
+                {% if fastener.length %}
+                <div>
+                    <div class="form-label">Length</div>
+                    <div style="font-size: 16px; font-family: var(--font-mono);">{{ fastener.length }} mm</div>
+                </div>
+                {% endif %}
+
+                {% if fastener.thread_pitch %}
+                <div>
+                    <div class="form-label">Thread Pitch</div>
+                    <div style="font-size: 16px; font-family: var(--font-mono);">{{ fastener.thread_pitch }} mm</div>
+                </div>
+                {% endif %}
+
+                <div>
+                    <div class="form-label">Stock Level</div>
+                    <div style="font-size: 18px; font-weight: 700; font-family: var(--font-mono);
+                                {% if fastener.min_quantity and fastener.quantity <= fastener.min_quantity %}color: var(--warning);{% else %}color: var(--success);{% endif %}">
+                        {{ fastener.quantity }} {{ fastener.unit }}
+                        {% if fastener.min_quantity %}
+                        <div style="font-size: 12px; color: var(--text-secondary); font-weight: 400; margin-top: 4px;">
+                            min: {{ fastener.min_quantity }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if fastener.location %}
+                <div>
+                    <div class="form-label">Location</div>
+                    <div style="font-size: 16px;">📍 {{ fastener.location }}</div>
+                </div>
+                {% endif %}
+
+                {% if fastener.grade %}
+                <div>
+                    <div class="form-label">Grade/Class</div>
+                    <div style="font-size: 16px;">{{ fastener.grade }}</div>
+                </div>
+                {% endif %}
+
+                {% if fastener.standard %}
+                <div>
+                    <div class="form-label">Standard</div>
+                    <div style="font-size: 16px;">{{ fastener.standard }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if fastener.use_case %}
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-glass);">
+                <div class="form-label">Use Case</div>
+                <div style="font-size: 14px; line-height: 1.8; color: var(--text-secondary); margin-top: 8px;">{{ fastener.use_case }}</div>
+            </div>
+            {% endif %}
+
+            {% if fastener.notes %}
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-glass);">
+                <div class="form-label">Notes</div>
+                <div style="font-size: 14px; line-height: 1.8; color: var(--text-secondary); margin-top: 8px;">{{ fastener.notes }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Links -->
+            <div style="margin-top: 25px; display: flex; gap: 15px;">
+                {% if fastener.purchase_url %}
+                <a href="{{ fastener.purchase_url }}" target="_blank" class="btn btn-blue" style="font-size: 13px; padding: 10px 20px;">
+                    🛒 Reorder
+                </a>
+                {% endif %}
+
+                <a href="https://www.bunnings.co.nz/search?q={{ fastener.fastener_type | urlencode }} {{ fastener.diameter }}mm {{ fastener.length }}mm"
+                   target="_blank"
+                   class="btn"
+                   style="font-size: 13px; padding: 10px 20px;">
+                    🔍 Find on Bunnings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

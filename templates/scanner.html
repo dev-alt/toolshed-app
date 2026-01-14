@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}QR Scanner - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">QR Code Scanner</h1>
+    <a href="{{ url_for('index') }}" class="btn">Back to Dashboard</a>
+</div>
+
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="glass" style="padding: 32px; border-radius: 20px; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; margin-bottom: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">
+            Scan QR Code
+        </h3>
+
+        <div id="scanner-container" style="position: relative; width: 100%; max-width: 500px; margin: 0 auto;">
+            <video id="video" style="width: 100%; border-radius: 12px; background: #000;"></video>
+            <canvas id="canvas" style="display: none;"></canvas>
+        </div>
+
+        <div id="status" style="margin-top: 20px; padding: 16px; border-radius: 12px; text-align: center; font-family: var(--font-display); font-weight: 600;">
+            Click "Start Scanner" to begin
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: center;">
+            <button id="startBtn" class="btn btn-primary">Start Scanner</button>
+            <button id="stopBtn" class="btn" style="display: none;">Stop Scanner</button>
+        </div>
+
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-glass);">
+            <h4 style="font-size: 16px; margin-bottom: 16px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">
+                How to use:
+            </h4>
+            <ol style="line-height: 1.8; color: var(--text-secondary); padding-left: 20px;">
+                <li>Click "Start Scanner" to activate your camera</li>
+                <li>Point your camera at a QR code label</li>
+                <li>The scanner will automatically detect and redirect you to the item</li>
+                <li>Works with tools, consumables, materials, and fasteners</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="glass" style="padding: 24px; border-radius: 16px;">
+        <h4 style="font-size: 16px; margin-bottom: 12px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">
+            Need QR Code Labels?
+        </h4>
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+            Generate and print QR code labels for all your items
+        </p>
+        <a href="{{ url_for('index') }}" class="btn btn-blue">Generate Labels</a>
+    </div>
+</div>
+
+<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const status = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    let stream = null;
+    let scanning = false;
+
+    function updateStatus(message, type = 'info') {
+        status.textContent = message;
+        status.style.background = type === 'success' ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1))' :
+                                 type === 'error' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1))' :
+                                 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1))';
+        status.style.color = type === 'success' ? 'var(--success)' :
+                            type === 'error' ? 'var(--danger)' :
+                            'var(--primary)';
+    }
+
+    async function startScanner() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            video.srcObject = stream;
+            video.setAttribute('playsinline', true);
+            video.play();
+            scanning = true;
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            updateStatus('Scanner active - point camera at QR code', 'info');
+            requestAnimationFrame(tick);
+        } catch (err) {
+            updateStatus('Camera access denied. Please enable camera permissions.', 'error');
+            console.error('Error accessing camera:', err);
+        }
+    }
+
+    function stopScanner() {
+        scanning = false;
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        video.srcObject = null;
+        startBtn.style.display = 'inline-block';
+        stopBtn.style.display = 'none';
+        updateStatus('Scanner stopped', 'info');
+    }
+
+    function tick() {
+        if (!scanning) return;
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+            if (code) {
+                updateStatus('QR Code detected! Redirecting...', 'success');
+                scanning = false;
+                setTimeout(() => {
+                    window.location.href = code.data;
+                }, 500);
+                return;
+            }
+        }
+
+        requestAnimationFrame(tick);
+    }
+
+    startBtn.addEventListener('click', startScanner);
+    stopBtn.addEventListener('click', stopScanner);
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+</script>
+{% endblock %}
