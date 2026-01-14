@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Material - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Edit Material</h1>
+    <a href="{{ url_for('materials') }}" class="btn">Cancel</a>
+</div>
+
+<div style="max-width: 900px;">
+    <form method="POST" action="{{ url_for('edit_material', material_id=material.id) }}" enctype="multipart/form-data">
+        <div class="glass" style="padding: 32px; border-radius: 20px; margin-bottom: 24px;">
+            <h3 style="font-size: 18px; margin-bottom: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Basic Information</h3>
+
+            <div class="form-group">
+                <label class="form-label" for="name">Material Name *</label>
+                <input type="text" id="name" name="name" class="form-input"
+                       placeholder="e.g., Pine 2x4, 6061 Aluminum Sheet, PLA Filament"
+                       value="{{ material.name }}" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category *</label>
+                    <select id="category" name="category" class="form-select" required>
+                        <option value="">Select Category</option>
+                        <option value="Wood" {% if material.category == 'Wood' %}selected{% endif %}>Wood</option>
+                        <option value="Metal" {% if material.category == 'Metal' %}selected{% endif %}>Metal</option>
+                        <option value="Plastic" {% if material.category == 'Plastic' %}selected{% endif %}>Plastic</option>
+                        <option value="Fabric" {% if material.category == 'Fabric' %}selected{% endif %}>Fabric</option>
+                        <option value="Glass" {% if material.category == 'Glass' %}selected{% endif %}>Glass</option>
+                        <option value="Stone" {% if material.category == 'Stone' %}selected{% endif %}>Stone</option>
+                        <option value="Composite" {% if material.category == 'Composite' %}selected{% endif %}>Composite</option>
+                        <option value="Filament" {% if material.category == 'Filament' %}selected{% endif %}>3D Printer Filament</option>
+                        <option value="Resin" {% if material.category == 'Resin' %}selected{% endif %}>Resin</option>
+                        <option value="Paper" {% if material.category == 'Paper' %}selected{% endif %}>Paper/Cardboard</option>
+                        <option value="Foam" {% if material.category == 'Foam' %}selected{% endif %}>Foam</option>
+                        <option value="Rubber" {% if material.category == 'Rubber' %}selected{% endif %}>Rubber</option>
+                        <option value="Other" {% if material.category == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="material_type">Specific Type</label>
+                    <input type="text" id="material_type" name="material_type" class="form-input"
+                           placeholder="e.g., Pine, Aluminum 6061, PLA"
+                           value="{{ material.material_type or '' }}">
+                </div>
+            </div>
+        </div>
+
+        <div class="glass" style="padding: 32px; border-radius: 20px; margin-bottom: 24px;">
+            <h3 style="font-size: 18px; margin-bottom: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Dimensions & Quantity</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="dimensions_length">Length</label>
+                    <input type="number" id="dimensions_length" name="dimensions_length" class="form-input"
+                           step="0.01" min="0" placeholder="e.g., 2400"
+                           value="{{ material.dimensions_length or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="dimensions_width">Width</label>
+                    <input type="number" id="dimensions_width" name="dimensions_width" class="form-input"
+                           step="0.01" min="0" placeholder="e.g., 90"
+                           value="{{ material.dimensions_width or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="dimensions_thickness">Thickness</label>
+                    <input type="number" id="dimensions_thickness" name="dimensions_thickness" class="form-input"
+                           step="0.01" min="0" placeholder="e.g., 45"
+                           value="{{ material.dimensions_thickness or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="dimension_unit">Unit</label>
+                    <select id="dimension_unit" name="dimension_unit" class="form-select">
+                        <option value="mm" {% if material.dimension_unit == 'mm' or not material.dimension_unit %}selected{% endif %}>Millimeters (mm)</option>
+                        <option value="cm" {% if material.dimension_unit == 'cm' %}selected{% endif %}>Centimeters (cm)</option>
+                        <option value="m" {% if material.dimension_unit == 'm' %}selected{% endif %}>Meters (m)</option>
+                        <option value="in" {% if material.dimension_unit == 'in' %}selected{% endif %}>Inches (in)</option>
+                        <option value="ft" {% if material.dimension_unit == 'ft' %}selected{% endif %}>Feet (ft)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="quantity">Quantity *</label>
+                    <input type="number" id="quantity" name="quantity" class="form-input"
+                           step="0.01" min="0" value="{{ material.quantity or 0 }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="unit">Stock Unit</label>
+                    <select id="unit" name="unit" class="form-select">
+                        <option value="pcs" {% if material.unit == 'pcs' or not material.unit %}selected{% endif %}>Pieces</option>
+                        <option value="sheets" {% if material.unit == 'sheets' %}selected{% endif %}>Sheets</option>
+                        <option value="boards" {% if material.unit == 'boards' %}selected{% endif %}>Boards</option>
+                        <option value="rolls" {% if material.unit == 'rolls' %}selected{% endif %}>Rolls</option>
+                        <option value="kg" {% if material.unit == 'kg' %}selected{% endif %}>Kilograms</option>
+                        <option value="g" {% if material.unit == 'g' %}selected{% endif %}>Grams</option>
+                        <option value="m" {% if material.unit == 'm' %}selected{% endif %}>Meters</option>
+                        <option value="ft" {% if material.unit == 'ft' %}selected{% endif %}>Feet</option>
+                        <option value="m²" {% if material.unit == 'm²' %}selected{% endif %}>Square Meters</option>
+                        <option value="ft²" {% if material.unit == 'ft²' %}selected{% endif %}>Square Feet</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="min_quantity">Min Stock Alert</label>
+                    <input type="number" id="min_quantity" name="min_quantity" class="form-input"
+                           step="0.01" min="0" placeholder="Optional"
+                           value="{{ material.min_quantity or '' }}">
+                </div>
+            </div>
+        </div>
+
+        <div class="glass" style="padding: 32px; border-radius: 20px; margin-bottom: 24px;">
+            <h3 style="font-size: 18px; margin-bottom: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Specifications</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="grade">Grade/Quality</label>
+                    <input type="text" id="grade" name="grade" class="form-input"
+                           placeholder="e.g., T6, Construction Grade"
+                           value="{{ material.grade or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="finish">Finish/Surface</label>
+                    <input type="text" id="finish" name="finish" class="form-input"
+                           placeholder="e.g., Polished, Rough, Anodized"
+                           value="{{ material.finish or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="color">Color</label>
+                    <input type="text" id="color" name="color" class="form-input"
+                           placeholder="e.g., Natural, Black, Silver"
+                           value="{{ material.color or '' }}">
+                </div>
+            </div>
+        </div>
+
+        <div class="glass" style="padding: 32px; border-radius: 20px; margin-bottom: 24px;">
+            <h3 style="font-size: 18px; margin-bottom: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Cost & Purchase Info</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="purchase_price">Purchase Price ($)</label>
+                    <input type="number" id="purchase_price" name="purchase_price" class="form-input"
+                           step="0.01" min="0" placeholder="Total cost"
+                           value="{{ material.purchase_price or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cost_per_unit">Cost Per Unit ($)</label>
+                    <input type="number" id="cost_per_unit" name="cost_per_unit" class="form-input"
+                           step="0.01" min="0" placeholder="Price per piece/meter/kg"
+                           value="{{ material.cost_per_unit or '' }}">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="supplier">Supplier</label>
+                    <input type="text" id="supplier" name="supplier" class="form-input"
+                           placeholder="e.g., Bunnings, Mitre10, AliExpress"
+                           value="{{ material.supplier or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="purchase_date">Purchase Date</label>
+                    <input type="date" id="purchase_date" name="purchase_date" class="form-input"
+                           value="{{ material.purchase_date or '' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="purchase_url">Purchase URL</label>
+                <input type="url" id="purchase_url" name="purchase_url" class="form-input"
+                       placeholder="https://..."
+                       value="{{ material.purchase_url or '' }}">
+            </div>
+        </div>
+
+        <div class="glass" style="padding: 32px; border-radius: 20px; margin-bottom: 24px;">
+            <h3 style="font-size: 18px; margin-bottom: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Additional Details</h3>
+
+            <div class="form-group">
+                <label class="form-label" for="location">Storage Location</label>
+                <input type="text" id="location" name="location" class="form-input"
+                       placeholder="e.g., Shelf C, Rack 2, Storage Bin"
+                       value="{{ material.location or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-textarea" rows="4"
+                          placeholder="Additional information, project uses, special handling...">{{ material.notes or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="image">Image</label>
+                {% if material.image_path %}
+                <div style="margin-bottom: 10px;">
+                    <img src="{{ url_for('static', filename=material.image_path) }}"
+                         alt="{{ material.name }}"
+                         style="max-width: 200px; border-radius: 8px; border: 1px solid var(--border-glass);">
+                    <input type="hidden" name="current_image" value="{{ material.image_path }}">
+                </div>
+                {% endif %}
+                <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Accepted formats: PNG, JPG, GIF, WebP (Max 16MB)
+                    {% if material.image_path %}<br>Leave empty to keep current image{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <button type="submit" class="btn btn-primary">Update Material</button>
+            <a href="{{ url_for('materials') }}" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

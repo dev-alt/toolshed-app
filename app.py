@@ -71,9 +71,23 @@ def init_db():
         CREATE TABLE IF NOT EXISTS materials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
+            category TEXT,
             material_type TEXT,
-            quantity REAL,
+            quantity REAL DEFAULT 0,
             unit TEXT,
+            min_quantity REAL,
+            dimensions_length REAL,
+            dimensions_width REAL,
+            dimensions_thickness REAL,
+            dimension_unit TEXT,
+            grade TEXT,
+            finish TEXT,
+            color TEXT,
+            purchase_price REAL,
+            cost_per_unit REAL,
+            supplier TEXT,
+            purchase_date TEXT,
+            purchase_url TEXT,
             location TEXT,
             notes TEXT,
             image_path TEXT,
@@ -504,10 +518,143 @@ def delete_consumable(consumable_id):
 def materials():
     """List all materials"""
     conn = get_db()
-    materials = conn.execute('SELECT * FROM materials ORDER BY name').fetchall()
+    materials = conn.execute('SELECT * FROM materials ORDER BY category, name').fetchall()
+
+    # Get low stock materials
+    low_stock = conn.execute('''
+        SELECT * FROM materials
+        WHERE min_quantity IS NOT NULL AND quantity <= min_quantity
+        ORDER BY category, name
+    ''').fetchall()
+
     conn.close()
 
-    return render_template('materials.html', materials=materials)
+    return render_template('materials.html', materials=materials, low_stock=low_stock)
+
+@app.route('/material/add', methods=['GET', 'POST'])
+def add_material():
+    """Add new material"""
+    if request.method == 'POST':
+        conn = get_db()
+        c = conn.cursor()
+
+        # Handle file upload
+        image_path = None
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_path = f"uploads/{filename}"
+
+        c.execute('''
+            INSERT INTO materials (name, category, material_type, quantity, unit, min_quantity,
+                                 dimensions_length, dimensions_width, dimensions_thickness, dimension_unit,
+                                 grade, finish, color, purchase_price, cost_per_unit, supplier,
+                                 purchase_date, purchase_url, location, notes, image_path)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            request.form.get('name'),
+            request.form.get('category'),
+            request.form.get('material_type'),
+            request.form.get('quantity', 0),
+            request.form.get('unit'),
+            request.form.get('min_quantity') or None,
+            request.form.get('dimensions_length') or None,
+            request.form.get('dimensions_width') or None,
+            request.form.get('dimensions_thickness') or None,
+            request.form.get('dimension_unit'),
+            request.form.get('grade'),
+            request.form.get('finish'),
+            request.form.get('color'),
+            request.form.get('purchase_price') or None,
+            request.form.get('cost_per_unit') or None,
+            request.form.get('supplier'),
+            request.form.get('purchase_date'),
+            request.form.get('purchase_url'),
+            request.form.get('location'),
+            request.form.get('notes'),
+            image_path
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('materials'))
+
+    return render_template('add_material.html')
+
+@app.route('/material/<int:material_id>/edit', methods=['GET', 'POST'])
+def edit_material(material_id):
+    """Edit a material"""
+    conn = get_db()
+
+    if request.method == 'POST':
+        c = conn.cursor()
+
+        # Handle file upload
+        image_path = request.form.get('current_image')
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_path = f"uploads/{filename}"
+
+        c.execute('''
+            UPDATE materials
+            SET name = ?, category = ?, material_type = ?, quantity = ?, unit = ?, min_quantity = ?,
+                dimensions_length = ?, dimensions_width = ?, dimensions_thickness = ?, dimension_unit = ?,
+                grade = ?, finish = ?, color = ?, purchase_price = ?, cost_per_unit = ?, supplier = ?,
+                purchase_date = ?, purchase_url = ?, location = ?, notes = ?, image_path = ?
+            WHERE id = ?
+        ''', (
+            request.form.get('name'),
+            request.form.get('category'),
+            request.form.get('material_type'),
+            request.form.get('quantity', 0),
+            request.form.get('unit'),
+            request.form.get('min_quantity') or None,
+            request.form.get('dimensions_length') or None,
+            request.form.get('dimensions_width') or None,
+            request.form.get('dimensions_thickness') or None,
+            request.form.get('dimension_unit'),
+            request.form.get('grade'),
+            request.form.get('finish'),
+            request.form.get('color'),
+            request.form.get('purchase_price') or None,
+            request.form.get('cost_per_unit') or None,
+            request.form.get('supplier'),
+            request.form.get('purchase_date'),
+            request.form.get('purchase_url'),
+            request.form.get('location'),
+            request.form.get('notes'),
+            image_path,
+            material_id
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('materials'))
+
+    material = conn.execute('SELECT * FROM materials WHERE id = ?', (material_id,)).fetchone()
+    conn.close()
+
+    if not material:
+        return redirect(url_for('materials'))
+
+    return render_template('edit_material.html', material=material)
+
+@app.route('/material/<int:material_id>/delete', methods=['POST'])
+def delete_material(material_id):
+    """Delete a material"""
+    conn = get_db()
+    conn.execute('DELETE FROM materials WHERE id = ?', (material_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('materials'))
 
 @app.route('/fasteners')
 def fasteners():

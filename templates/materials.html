@@ -4,30 +4,100 @@
 
 {% block content %}
 <div class="flex justify-between align-center mb-30">
-    <h1 class="section-header">Materials</h1>
-    <div style="color: var(--text-secondary); font-size: 14px;">Coming soon...</div>
+    <h1 class="section-header">Raw Materials</h1>
+    <a href="{{ url_for('add_material') }}" class="btn btn-success">+ Add Material</a>
 </div>
+
+<!-- Low Stock Alert -->
+{% if low_stock %}
+<div class="glass" style="padding: 24px; margin-bottom: 32px; border-radius: 16px; border-left: 4px solid var(--warning);">
+    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: var(--warning); font-family: var(--font-display);">⚠️ Low Stock Alert</h3>
+    <div style="display: grid; gap: 12px;">
+        {% for item in low_stock %}
+        <div class="low-stock-item">
+            <div>
+                <div class="low-stock-name">{{ item.name }}</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">{{ item.category }} {% if item.material_type %}• {{ item.material_type }}{% endif %}</div>
+            </div>
+            <div class="low-stock-qty">
+                {{ item.quantity }} / {{ item.min_quantity }} min {{ item.unit }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 {% if materials %}
 <div class="table-container">
     <table class="table">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Quantity</th>
+                <th>Material</th>
+                <th>Category</th>
+                <th>Dimensions</th>
+                <th>Stock</th>
+                <th>Cost</th>
                 <th>Location</th>
-                <th>Notes</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for item in materials %}
             <tr>
-                <td style="font-weight: 600;">{{ item.name }}</td>
-                <td>{{ item.material_type or '-' }}</td>
-                <td>{{ item.quantity }} {{ item.unit }}</td>
+                <td>
+                    <div style="font-weight: 600; font-family: var(--font-display);">{{ item.name }}</div>
+                    {% if item.material_type %}
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">{{ item.material_type }}</div>
+                    {% endif %}
+                    {% if item.grade or item.finish or item.color %}
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                        {% if item.grade %}Grade: {{ item.grade }}{% endif %}
+                        {% if item.finish %}{% if item.grade %} • {% endif %}{{ item.finish }}{% endif %}
+                        {% if item.color %}{% if item.grade or item.finish %} • {% endif %}{{ item.color }}{% endif %}
+                    </div>
+                    {% endif %}
+                </td>
+                <td>{{ item.category or '-' }}</td>
+                <td style="font-family: var(--font-mono); font-size: 13px;">
+                    {% if item.dimensions_length or item.dimensions_width or item.dimensions_thickness %}
+                        {% if item.dimensions_length %}{{ item.dimensions_length }}{% endif %}
+                        {% if item.dimensions_width %}{% if item.dimensions_length %} × {% endif %}{{ item.dimensions_width }}{% endif %}
+                        {% if item.dimensions_thickness %}{% if item.dimensions_length or item.dimensions_width %} × {% endif %}{{ item.dimensions_thickness }}{% endif %}
+                        {{ item.dimension_unit or 'mm' }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.min_quantity and item.quantity <= item.min_quantity %}
+                    <span style="color: var(--warning); font-weight: 600; font-family: var(--font-mono);">{{ item.quantity }}</span>
+                    {% else %}
+                    <span style="font-family: var(--font-mono);">{{ item.quantity }}</span>
+                    {% endif %}
+                    {{ item.unit }}
+                    {% if item.min_quantity %}
+                    <div style="font-size: 11px; color: var(--text-muted);">min: {{ item.min_quantity }}</div>
+                    {% endif %}
+                </td>
+                <td style="font-family: var(--font-mono); font-size: 13px;">
+                    {% if item.purchase_price %}
+                        ${{ "%.2f"|format(item.purchase_price) }}
+                    {% elif item.cost_per_unit %}
+                        ${{ "%.2f"|format(item.cost_per_unit) }}/{{ item.unit }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
                 <td>{{ item.location or '-' }}</td>
-                <td style="font-size: 12px; color: var(--text-secondary);">{{ item.notes or '-' }}</td>
+                <td>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ url_for('edit_material', material_id=item.id) }}" class="btn" style="padding: 8px 16px; font-size: 13px;">Edit</a>
+                        <form method="POST" action="{{ url_for('delete_material', material_id=item.id) }}" style="margin: 0;" onsubmit="return confirm('Delete this material?');">
+                            <button type="submit" class="btn" style="padding: 8px 16px; font-size: 13px; background: linear-gradient(135deg, var(--danger), #dc2626); border-color: var(--danger); color: white;">Delete</button>
+                        </form>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -40,6 +110,7 @@
     <p style="color: var(--text-secondary); margin-bottom: 20px;">
         Track your wood, aluminum extrusions, resin, filament, and other materials
     </p>
+    <a href="{{ url_for('add_material') }}" class="btn btn-primary">Add First Material</a>
 </div>
 {% endif %}
 {% endblock %}
