@@ -36,8 +36,34 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Page Load Indicator -->
+    <div id="pageLoadIndicator" style="position: fixed; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-purple), var(--accent-cyan)); transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; z-index: 9999;"></div>
+
     <!-- Toast Notification System -->
     <script>
+        // Page Load Indicator
+        window.addEventListener('beforeunload', () => {
+            document.getElementById('pageLoadIndicator').style.transform = 'scaleX(1)';
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const indicator = document.getElementById('pageLoadIndicator');
+            indicator.style.transform = 'scaleX(1)';
+            setTimeout(() => {
+                indicator.style.transform = 'scaleX(0)';
+            }, 300);
+        });
+
+        // Add loading indicator to all navigation links
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a[href]:not([target="_blank"]):not([onclick])');
+            if (link && !link.href.includes('#')) {
+                const indicator = document.getElementById('pageLoadIndicator');
+                indicator.style.transform = 'scaleX(0.7)';
+                indicator.style.transition = 'transform 2s ease';
+            }
+        });
+
         function showToast(message, type = 'info', title = '') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
