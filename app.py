@@ -441,6 +441,65 @@ def add_consumable():
     
     return render_template('add_consumable.html')
 
+@app.route('/consumable/<int:consumable_id>/edit', methods=['GET', 'POST'])
+def edit_consumable(consumable_id):
+    """Edit a consumable"""
+    conn = get_db()
+
+    if request.method == 'POST':
+        c = conn.cursor()
+
+        # Handle file upload
+        image_path = request.form.get('current_image')
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_path = f"uploads/{filename}"
+
+        c.execute('''
+            UPDATE consumables
+            SET name = ?, category = ?, quantity = ?, unit = ?, min_quantity = ?,
+                location = ?, compatible_with = ?, notes = ?, image_path = ?, purchase_url = ?
+            WHERE id = ?
+        ''', (
+            request.form.get('name'),
+            request.form.get('category'),
+            request.form.get('quantity', 0),
+            request.form.get('unit'),
+            request.form.get('min_quantity', 0),
+            request.form.get('location'),
+            request.form.get('compatible_with'),
+            request.form.get('notes'),
+            image_path,
+            request.form.get('purchase_url'),
+            consumable_id
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('consumables'))
+
+    consumable = conn.execute('SELECT * FROM consumables WHERE id = ?', (consumable_id,)).fetchone()
+    conn.close()
+
+    if not consumable:
+        return redirect(url_for('consumables'))
+
+    return render_template('edit_consumable.html', consumable=consumable)
+
+@app.route('/consumable/<int:consumable_id>/delete', methods=['POST'])
+def delete_consumable(consumable_id):
+    """Delete a consumable"""
+    conn = get_db()
+    conn.execute('DELETE FROM consumables WHERE id = ?', (consumable_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('consumables'))
+
 @app.route('/materials')
 def materials():
     """List all materials"""

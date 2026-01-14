@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Consumable - Toolshed App{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-30">
+    <h1 class="section-header">Edit Consumable</h1>
+    <a href="{{ url_for('consumables') }}" class="btn">Cancel</a>
+</div>
+
+<div style="max-width: 900px;">
+    <form method="POST" action="{{ url_for('edit_consumable', consumable_id=consumable.id) }}" enctype="multipart/form-data">
+        <div class="glass" style="padding: 32px; border-radius: 20px;">
+
+            <div class="form-group">
+                <label class="form-label" for="name">Consumable Name *</label>
+                <input type="text" id="name" name="name" class="form-input"
+                       placeholder="e.g., 125mm Sanding Discs, HSS Drill Bits Set"
+                       value="{{ consumable.name }}" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category</label>
+                    <select id="category" name="category" class="form-select">
+                        <option value="">Select Category</option>
+                        <option value="Drill Bits" {% if consumable.category == 'Drill Bits' %}selected{% endif %}>Drill Bits</option>
+                        <option value="Saw Blades" {% if consumable.category == 'Saw Blades' %}selected{% endif %}>Saw Blades</option>
+                        <option value="Sanding Discs" {% if consumable.category == 'Sanding Discs' %}selected{% endif %}>Sanding Discs</option>
+                        <option value="Grinding Discs" {% if consumable.category == 'Grinding Discs' %}selected{% endif %}>Grinding Discs</option>
+                        <option value="Cutting Discs" {% if consumable.category == 'Cutting Discs' %}selected{% endif %}>Cutting Discs</option>
+                        <option value="Fasteners" {% if consumable.category == 'Fasteners' %}selected{% endif %}>Fasteners</option>
+                        <option value="Other" {% if consumable.category == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="unit">Unit</label>
+                    <select id="unit" name="unit" class="form-select">
+                        <option value="pcs" {% if consumable.unit == 'pcs' %}selected{% endif %}>Pieces (pcs)</option>
+                        <option value="sets" {% if consumable.unit == 'sets' %}selected{% endif %}>Sets</option>
+                        <option value="boxes" {% if consumable.unit == 'boxes' %}selected{% endif %}>Boxes</option>
+                        <option value="m" {% if consumable.unit == 'm' %}selected{% endif %}>Meters (m)</option>
+                        <option value="kg" {% if consumable.unit == 'kg' %}selected{% endif %}>Kilograms (kg)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label" for="quantity">Current Quantity *</label>
+                    <input type="number" id="quantity" name="quantity" class="form-input"
+                           min="0" step="1" value="{{ consumable.quantity }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="min_quantity">Minimum Stock Level</label>
+                    <input type="number" id="min_quantity" name="min_quantity" class="form-input"
+                           min="0" step="1" value="{{ consumable.min_quantity or 0 }}">
+                    <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                        Get alert when stock falls below this level
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="location">Storage Location</label>
+                <input type="text" id="location" name="location" class="form-input"
+                       placeholder="e.g., Drawer 2, Bin A3, Shelf B"
+                       value="{{ consumable.location or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="compatible_with">Compatible With</label>
+                <input type="text" id="compatible_with" name="compatible_with" class="form-input"
+                       placeholder="e.g., Orbital Sander, Angle Grinder, Jigsaw"
+                       value="{{ consumable.compatible_with or '' }}">
+                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Which tools use this consumable?
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="purchase_url">Purchase URL</label>
+                <input type="url" id="purchase_url" name="purchase_url" class="form-input"
+                       placeholder="https://www.bunnings.co.nz/... or AliExpress link"
+                       value="{{ consumable.purchase_url or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-textarea"
+                          placeholder="Specifications, compatibility notes, or other details...">{{ consumable.notes or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="image">Image</label>
+                {% if consumable.image_path %}
+                <div style="margin-bottom: 10px;">
+                    <img src="{{ url_for('static', filename=consumable.image_path) }}"
+                         alt="{{ consumable.name }}"
+                         style="max-width: 200px; border-radius: 8px; border: 1px solid var(--border-glass);">
+                    <input type="hidden" name="current_image" value="{{ consumable.image_path }}">
+                </div>
+                {% endif %}
+                <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Accepted formats: PNG, JPG, GIF, WebP (Max 16MB)
+                    {% if consumable.image_path %}<br>Leave empty to keep current image{% endif %}
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary">Update Consumable</button>
+                <a href="{{ url_for('consumables') }}" class="btn">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

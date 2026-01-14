@@ -37,11 +37,12 @@
                 <td>{{ item.location or '-' }}</td>
                 <td style="font-size: 12px; color: var(--text-secondary);">{{ item.compatible_with or '-' }}</td>
                 <td>
-                    {% if item.purchase_url %}
-                    <a href="{{ item.purchase_url }}" target="_blank" style="color: var(--accent-orange); text-decoration: none;">
-                        🛒 Buy
-                    </a>
-                    {% endif %}
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ url_for('edit_consumable', consumable_id=item.id) }}" class="btn" style="padding: 8px 16px; font-size: 13px;">Edit</a>
+                        <form method="POST" action="{{ url_for('delete_consumable', consumable_id=item.id) }}" style="margin: 0;" onsubmit="return confirm('Delete this consumable?');">
+                            <button type="submit" class="btn" style="padding: 8px 16px; font-size: 13px; background: linear-gradient(135deg, var(--danger), #dc2626); border-color: var(--danger); color: white;">Delete</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
